@@ -1,18 +1,10 @@
 module;
 
-/*#include <boost/beast/core.hpp>
-#include <boost/beast/core/tcp_stream.hpp>
-#include <boost/beast/http.hpp>*/
 #include <boost/container/flat_map.hpp>
 import boost;
 import std;
 export module net_common;
 
-/*namespace beast = boost::beast;
-namespace http = beast::http;
-namespace websocket = beast::websocket;
-namespace net = boost::asio;
-namespace ssl = boost::asio::ssl;*/
 
 export namespace fast::net {
 

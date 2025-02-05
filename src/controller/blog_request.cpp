@@ -1,16 +1,6 @@
 // beast_net_server.cpp
 module;
 
-/*#include <boost/asio/awaitable.hpp>
-
-#include <boost/mysql/connection_pool.hpp>
-#include <boost/beast/http/message_fwd.hpp>
-#include <boost/beast/http/string_body_fwd.hpp>
-#include <boost/beast/http/field.hpp>*/
-
-#include <boost/variant.hpp>
-#include <boost/json.hpp>
-
 import boost;
 import std;
 import mysql_connect;
@@ -46,9 +36,9 @@ asio::awaitable<void> get_blog_columns(beast::http::request<beast::http::string_
 asio::awaitable<void> get_all_blog(beast::http::request<beast::http::string_body>& req,
                                           beast::http::response<beast::http::string_body>& res,
                                           fast::net::SessionData& session,
-                                          boost::variant<std::map<std::string, std::string>>& params)
+                                          std::variant<std::map<std::string, std::string>>& params)
 {
-    auto& path_params = boost::get<std::map<std::string, std::string>>(params);
+    auto& path_params = std::get<std::map<std::string, std::string>>(params);
     std::string id = path_params["id"];
     std::string page = path_params["page"];
     std::string page_size = path_params["page_size"];
@@ -68,9 +58,9 @@ asio::awaitable<void> get_all_blog(beast::http::request<beast::http::string_body
 asio::awaitable<void> add_route_rest_full(beast::http::request<beast::http::string_body>& req,
                                                  beast::http::response<beast::http::string_body>& res,
                                                  fast::net::SessionData& session,
-                                                 boost::variant<std::map<std::string, std::string>>& params)
+                                                 std::variant<std::map<std::string, std::string>>& params)
 {
-    auto& path_params = boost::get<std::map<std::string, std::string>>(params);
+    auto& path_params = std::get<std::map<std::string, std::string>>(params);
 
     std::string basic_string = req.body();
     boost::json::value json_value = boost::json::parse(basic_string);
@@ -104,9 +94,9 @@ asio::awaitable<void> add_route_rest_full(beast::http::request<beast::http::stri
 asio::awaitable<void> get_one_blog(beast::http::request<beast::http::string_body>& req,
                                           beast::http::response<beast::http::string_body>& res,
                                           fast::net::SessionData& session,
-                                          boost::variant<std::map<std::string, std::string>>& params)
+                                          std::variant<std::map<std::string, std::string>>& params)
 {
-    auto& path_params = boost::get<std::map<std::string, std::string>>(params);
+    auto& path_params = std::get<std::map<std::string, std::string>>(params);
     std::string id = path_params["id"];
 
     fast::mapper::Database* database = session.get_database();

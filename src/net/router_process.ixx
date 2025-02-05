@@ -1,7 +1,5 @@
 module;
 
-#include <boost/variant.hpp>
-
 import std;
 import boost;
 import session_data;
@@ -16,7 +14,7 @@ public:
   using ParamHandler = std::function<asio::awaitable<void>(
        beast::http::request<beast::http::string_body> &,
       beast::http::response<beast::http::string_body> &, SessionData &,
-      boost::variant<std::map<std::string, std::string>> &)>;
+      std::variant<std::map<std::string, std::string>> &)>;
 
   using NoParamHandler = std::function<asio::awaitable<void>(
       beast::http::request<beast::http::string_body> &,
@@ -115,7 +113,7 @@ private:
 
   struct TrieNode {
     std::map<std::string, std::unique_ptr<TrieNode>> children;
-    std::map<std::string, boost::variant<ParamHandler, NoParamHandler>>
+    std::map<std::string, std::variant<ParamHandler, NoParamHandler>>
         handlers;
     std::vector<std::string> param_names;
   };

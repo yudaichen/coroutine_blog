@@ -1,33 +1,6 @@
 // beast_net_server.cpp
 module;
 
-/*#include <boost/asio/as_tuple.hpp>
-#include <boost/asio/awaitable.hpp>
-#include <boost/asio/buffer.hpp>
-#include <boost/asio/co_spawn.hpp>
-#include <boost/asio/consign.hpp>
-#include <boost/asio/detached.hpp>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/read.hpp>
-#include <boost/asio/signal_set.hpp>
-#include <boost/asio/ssl.hpp>
-#include <boost/asio/ssl/context.hpp>
-#include <boost/asio/ssl/stream.hpp>
-#include <boost/asio/this_coro.hpp>
-
-// Boost.Beast
-#include <boost/beast/core.hpp>
-#include <boost/beast/core/buffers_to_string.hpp>
-#include <boost/beast/core/tcp_stream.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/beast/websocket.hpp>
-
-#include <boost/mysql/connection_pool.hpp>
-
-#include <boost/variant.hpp>*/
-
 #include "common/server_certi.hpp"
 #include <boost/asio/error.hpp>
 #include <boost/beast/http/error.hpp>
@@ -527,6 +500,21 @@ namespace fast::net
         }
         co_return;
     }
+
+// 显式实例化模板
+template asio::awaitable<void> fast::net::Server::run_websocket_session<beast::tcp_stream>(
+    beast::tcp_stream &stream,
+    beast::flat_buffer &buffer,
+    beast::http::request<beast::http::string_body> req,
+    beast::string_view doc_root,
+    fast::net::Server &server);
+
+template asio::awaitable<void> fast::net::Server::run_websocket_session<asio::ssl::stream<beast::tcp_stream>>(
+    asio::ssl::stream<beast::tcp_stream> &stream,
+    beast::flat_buffer &buffer,
+    beast::http::request<beast::http::string_body> req,
+    beast::string_view doc_root,
+    fast::net::Server &server);
 }
 
 // namespace fast::net

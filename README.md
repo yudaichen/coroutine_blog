@@ -176,3 +176,8 @@ https://apt.llvm.org/
     ./b2 install --prefix=/path/to/boost/install
    或在Windows上：
     b2 install --prefix=C:\path\to\boost\install
+   
+## mysql
+
+    sudo systemctl status mysql
+    sudo systemctl start mysql

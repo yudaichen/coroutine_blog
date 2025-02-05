@@ -1,14 +1,6 @@
 module;
 
-
-#include <boost/asio/awaitable.hpp>
-
-#include <boost/beast/http/message_fwd.hpp>
-#include <boost/beast/http/string_body_fwd.hpp>
-
-#include <boost/variant.hpp>
-
-
+import boost;
 import std;
 import mysql_connect;
 import BS.thread_pool;
@@ -19,21 +11,21 @@ import session_data;
 export module blog_request;
 
 
-boost::asio::awaitable<void> get_blog_columns(boost::beast::http::request<boost::beast::http::string_body> &req,
-         boost::beast::http::response<boost::beast::http::string_body> &res,
+asio::awaitable<void> get_blog_columns(beast::http::request<beast::http::string_body> &req,
+         beast::http::response<beast::http::string_body> &res,
          fast::net::SessionData &session);
 
-boost::asio::awaitable<void> get_all_blog(boost::beast::http::request<boost::beast::http::string_body> &req,
-         boost::beast::http::response<boost::beast::http::string_body> &res,
-         fast::net::SessionData &session, boost::variant<std::map<std::string, std::string>> &params);
+asio::awaitable<void> get_all_blog(beast::http::request<beast::http::string_body> &req,
+         beast::http::response<beast::http::string_body> &res,
+         fast::net::SessionData &session, std::variant<std::map<std::string, std::string>> &params);
 
-boost::asio::awaitable<void> add_route_rest_full(boost::beast::http::request<boost::beast::http::string_body> &req,
-         boost::beast::http::response<boost::beast::http::string_body> &res,
-         fast::net::SessionData &session, boost::variant<std::map<std::string, std::string>> &params);
+asio::awaitable<void> add_route_rest_full(beast::http::request<beast::http::string_body> &req,
+         beast::http::response<beast::http::string_body> &res,
+         fast::net::SessionData &session, std::variant<std::map<std::string, std::string>> &params);
 
-boost::asio::awaitable<void> get_one_blog(boost::beast::http::request<boost::beast::http::string_body> &req,
-         boost::beast::http::response<boost::beast::http::string_body> &res,
-         fast::net::SessionData &session, boost::variant<std::map<std::string, std::string>> &params);
+asio::awaitable<void> get_one_blog(beast::http::request<beast::http::string_body> &req,
+         beast::http::response<beast::http::string_body> &res,
+         fast::net::SessionData &session, std::variant<std::map<std::string, std::string>> &params);
 
 
 export namespace fast::blog

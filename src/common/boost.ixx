@@ -1,7 +1,12 @@
 // asio.ixx
 module; // 全局模块片段
 
-#include <boost/asio.hpp>
+/*#include <boost/asio.hpp>*/
+#include <boost/asio/co_spawn.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/asio/static_thread_pool.hpp>
+#include <boost/asio/as_tuple.hpp>
+#include <boost/asio/signal_set.hpp>
 #include <boost/asio/awaitable.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/io_context.hpp>
@@ -28,6 +33,12 @@ module; // 全局模块片段
 #include <boost/redis/connection.hpp>
 #include <boost/redis/request.hpp>
 #include <boost/redis/response.hpp>
+
+// 引入 Boost.json 头文件
+#include <boost/json/array.hpp>
+#include <boost/json/object.hpp>
+#include <boost/json/parse.hpp>
+#include <boost/json/serialize.hpp>
 
 export module boost;
 
@@ -328,6 +339,7 @@ auto make_ssl_stream(asio::net::tcp::basic_stream_socket<Protocol> &sock,
 export namespace mysql {
 using boost::mysql::connection;
 using boost::mysql::connection_pool;
+using boost::mysql::datetime;
 using boost::mysql::diagnostics;
 using boost::mysql::error_code;
 using boost::mysql::handshake_params;
@@ -385,3 +397,12 @@ auto async_execute(connection &conn, const request &req,
 }
 } // namespace redis
 
+export namespace boost {
+namespace json {
+using boost::json::array;
+using boost::json::object;
+using boost::json::parse;
+using boost::json::serialize;
+using boost::json::value;
+} // namespace json
+} // namespace boost

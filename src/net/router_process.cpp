@@ -1,20 +1,5 @@
 module;
 
-/*#include <boost/asio/awaitable.hpp>
-#include <boost/asio/detached.hpp>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl/context.hpp>
-
-// Boost.Beast
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/variant/get.hpp>
-*/
-#include <boost/variant/get.hpp>
-#include <boost/variant/variant.hpp>
-
 import boost;
 module router_process;
 import std;
@@ -76,13 +61,13 @@ Router::handle_request(beast::http::request<beast::http::string_body> &req,
   if (current && current->handlers.find(method) != current->handlers.end()) {
     try {
       auto &handler = current->handlers.at(method);
-      if (boost::get<ParamHandler>(&handler)) {
-        boost::variant<std::map<std::string, std::string>> params(path_params);
-        co_await boost::get<ParamHandler>(handler)(req, res, session, params);
-      } else if (boost::get<NoParamHandler>(&handler)) {
-        co_await boost::get<NoParamHandler>(handler)(req, res, session);
+      if (std::holds_alternative<ParamHandler>(handler)) {
+        std::variant<std::map<std::string, std::string>> params(path_params);
+        co_await std::get<ParamHandler>(handler)(req, res, session, params);
+      } else if (std::holds_alternative<NoParamHandler>(handler)) {
+        co_await std::get<NoParamHandler>(handler)(req, res, session);
       }
-    } catch (boost::bad_get &e) {
+    } catch (std::bad_variant_access &e) {
       std::cerr << "bad get: " << e.what() << std::endl;
       res = server_error(std::move(req), "bad get");
     }

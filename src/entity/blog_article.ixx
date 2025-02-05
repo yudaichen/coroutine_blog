@@ -1,24 +1,25 @@
 module;
 
-#include <boost/json.hpp>
-#include <boost/mysql/datetime.hpp>
-
+/*#include <boost/json/object.hpp>
+#include <boost/json/array.hpp>
+#include <boost/mysql/datetime.hpp>*/
+import boost;
 import std;
 export module blog_article_entity;
 
 export namespace fast::entity {
-using namespace std::__1;
+using namespace std;
 struct BlogArticle {
-  uint64_t article_id;
+  std::uint64_t article_id;
   std::string title;
   std::string content_preview;
   std::string markdown;
-  boost::mysql::datetime create_time;
-  boost::mysql::datetime update_time;
+  mysql::datetime create_time;
+  mysql::datetime update_time;
 };
 
 chrono::system_clock::time_point
-mysql_datetime_to_time_point(const boost::mysql::datetime &dt) {
+mysql_datetime_to_time_point(const mysql::datetime &dt) {
   //using namespace std::chrono;
 
   auto tp = chrono::system_clock::from_time_t(0);

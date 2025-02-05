@@ -1,25 +1,6 @@
 // beast_net_server.ixx
 module;
 
-
-/*#include <boost/asio/awaitable.hpp>
-#include <boost/asio/detached.hpp>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl/context.hpp>
-#include <boost/asio/ssl/stream.hpp>
-#include <boost/asio/write.hpp>
-
-
-// Boost.Beast
-#include <boost/beast/core.hpp>
-#include <boost/beast/core/tcp_stream.hpp>
-#include <boost/beast/http.hpp>
-#include <boost/beast/websocket.hpp>
-
-#include <boost/mysql/connection_pool.hpp>
-
-#include <boost/variant.hpp>*/
 import boost;
 export module beast_net_server;
 

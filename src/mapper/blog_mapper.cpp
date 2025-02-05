@@ -1,10 +1,5 @@
 module;
 
-/*#include <boost/asio/awaitable.hpp>
-#include <boost/asio/use_awaitable.hpp>
-
-#include <boost/mysql/with_params.hpp>
-#include <boost/mysql/connection_pool.hpp>*/
 #include <boost/system/system_error.hpp>
 
 import boost;

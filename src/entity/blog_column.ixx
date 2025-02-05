@@ -1,17 +1,21 @@
 module;
 
-#include <boost/json.hpp>
-
+/*
+#include <boost/json/object.hpp>
+#include <boost/json/array.hpp>
+#include <boost/mysql/datetime.hpp>
+*/
+import boost;
 import std;
 export module blog_column_entity;
 
 export namespace fast::entity {
 struct  BlogColumn {
 public:
-  uint64_t column_id;
+  std::uint64_t column_id;
   std::string column_name;
   std::string column_description;
-  uint64_t pid;
+  std::uint64_t pid;
   std::vector<BlogColumn> children;
 };
 
@@ -41,7 +45,7 @@ boost::json::value columns_to_json(const std::vector<BlogColumn> &columns) {
 }
 
 void build_column_tree(std::vector<fast::entity::BlogColumn> &columns) {
-  std::map<uint64_t, std::vector<fast::entity::BlogColumn *>> children_map;
+  std::map<std::uint64_t, std::vector<fast::entity::BlogColumn *>> children_map;
 
   for (auto &column : columns) {
     children_map[column.pid].push_back(&column);
@@ -60,7 +64,7 @@ void build_column_tree(std::vector<fast::entity::BlogColumn> &columns) {
 
 void build_column_tree_recursive(
     std::vector<fast::entity::BlogColumn> &all_columns,
-    std::vector<fast::entity::BlogColumn> &current_level, uint64_t parent_id) {
+    std::vector<fast::entity::BlogColumn> &current_level, std::uint64_t parent_id) {
   for (auto &column : all_columns) {
     if (column.pid == parent_id) {
       current_level.push_back(column);
