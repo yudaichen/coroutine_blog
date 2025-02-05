@@ -38,3 +38,7 @@ cmake-build*
 *.exe
 *.out
 *.app
+
+# key
+key
+key.pub

@@ -2,15 +2,18 @@
 
 ## 项目概述
 本项目名为`blog`，是一个基于`LLVM`、`C++23`、`Boost.Asio`、`Boost.Mysql`的`HTTP协程`博客项目。项目支持使用C++20 Modules特性，包括`import std;`和`import asio;`。项目使用CMake作为构建系统，并通过Ninja进行构建。
-### CMake 最低版本要求：3.30.5
-### 项目名称：import_std_23
-### C++ 标准：C++23，且强制要求支持该标准。
-### llvm-20 clang-20
+     
+CMake 最低版本要求：3.30.5
 
-### 编译器和链接器标志
+项目名称：import_std_23
 
-# 设置链接器标志以使用libc++
-# 启用 C++20 模块支持
+C++ 标准：C++23，且强制要求支持该标准。
+
+编译器：llvm-20 clang-20
+
+
+## 设置链接器标志以使用libc++
+## 启用 C++20 模块支持
 ```cmake
     set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
     set(CMAKE_CXX_MODULE_STD ON)
@@ -19,13 +22,13 @@
 
 ---
 
-# CMake配置文件详解：开启`import std;`支持及解决CLion识别问题
+## CMake配置文件详解：开启`import std;`支持及解决CLion识别问题
 
-## 1. 开启`import std;`支持
+### 1. 开启`import std;`支持
 
 为了在项目中使用`import std;`，需要确保CMake配置正确地支持C++20 Modules，并且正确地引用了标准库模块（`std`模块）。以下是关键的CMake配置：
 
-### 1.1 启用C++20 Modules
+#### 1.1 启用C++20 Modules
 ```cmake
 cmake_minimum_required(VERSION 3.30.5)
 project(import_std_23)
