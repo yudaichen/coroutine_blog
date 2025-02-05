@@ -20,7 +20,7 @@ module;
 #include <boost/mysql/connection_pool.hpp>
 
 #include <boost/variant.hpp>*/
-import asio;
+import boost;
 export module beast_net_server;
 
 import std;

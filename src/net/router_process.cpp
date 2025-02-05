@@ -15,7 +15,7 @@ module;
 #include <boost/variant/get.hpp>
 #include <boost/variant/variant.hpp>
 
-import asio;
+import boost;
 module router_process;
 import std;
 import session_data;

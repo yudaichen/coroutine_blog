@@ -5,7 +5,7 @@ module;
 //#include <ariant.hpp>
 
 import std;
-import asio;
+import boost;
 import blog_column_entity;
 import blog_article_entity;
 export module blog_mapper;

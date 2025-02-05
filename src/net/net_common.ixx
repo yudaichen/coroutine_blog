@@ -4,7 +4,7 @@ module;
 #include <boost/beast/core/tcp_stream.hpp>
 #include <boost/beast/http.hpp>*/
 #include <boost/container/flat_map.hpp>
-import asio;
+import boost;
 import std;
 export module net_common;
 

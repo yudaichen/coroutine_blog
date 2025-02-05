@@ -40,7 +40,7 @@ module beast_net_server;
 import session_data;
 import router_process;
 import net_common;
-import asio;
+import boost;
 
 namespace fast::net
 {

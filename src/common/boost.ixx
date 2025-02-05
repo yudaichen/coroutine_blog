@@ -29,7 +29,7 @@ module; // 全局模块片段
 #include <boost/redis/request.hpp>
 #include <boost/redis/response.hpp>
 
-export module asio;
+export module boost;
 
 // ==================== 主命名空间 ====================
 export namespace asio {

@@ -7,7 +7,7 @@ module;
 #include <boost/mysql/connection_pool.hpp>*/
 #include <boost/system/system_error.hpp>
 
-import asio;
+import boost;
 import blog_article_entity;
 import blog_column_entity;
 import std;

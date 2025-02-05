@@ -11,7 +11,7 @@ module;
 #include <boost/variant.hpp>
 #include <boost/json.hpp>
 
-import asio;
+import boost;
 import std;
 import mysql_connect;
 import beast_net_server;

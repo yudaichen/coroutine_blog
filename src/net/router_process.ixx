@@ -3,7 +3,7 @@ module;
 #include <boost/variant.hpp>
 
 import std;
-import asio;
+import boost;
 import session_data;
 import net_common;
 
