@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>bander 博客</title>
+    <link href="/static/css/bootstrap_5_3.min.css" rel="stylesheet">
+    <link href="/static/css/highlight_11_3_1.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <link href="/static/css/bootstrap-treeview_1_2_0.min.css"
+          rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
+
+        body {
+            background-color: #f4f5f7;
+            color: #333;
+            font-family: 'Comic Neue', cursive;
+            margin: 0;
+            font-size: 18px; /* 调整字体大小 */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: transparent;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            transition: color 0.3s;
+        }
+
+        .header-background {
+            background-image: url('/static/back.png'); /* 替换为您的背景图片路径 */
+            background-size: cover;
+            background-position: center;
+            height: 20vh; /* 占据屏幕五分之三的高度 */
+            position: relative;
+        }
+
+        @keyframes textAnimation {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .blog-title {
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s;
+        }
+
+        .tags {
+            display: flex;
+            padding: 5px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            flex-wrap: wrap;
+            justify-content: center;
+            background: transparent;
+            color: white;
+            transition: color 0.3s;
+        }
+
+        .tag {
+            margin: 0 5px;
+            padding: 5px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tag:hover {
+            background-color: white;
+            color: #1e1e1e;
+        }
+
+        .container {
+            padding: 1rem;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .post-title {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+        }
+
+        .post-meta {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .post-content {
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+            margin-top: auto;
+        }
+
+        @media (max-width: 768px) {
+            header .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            header .tags {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* 目录样式 */
+        .toc {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            width: 200px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .toc h2 {
+            font-size: 1.2rem;
+            margin-top: 0;
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            margin-bottom: 5px;
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div id="particles-js"></div>
+<header class="blog-header">
+    <div class="blog-title">bander 博客</div>
+    <div class="tags">
+        <div class="tag">主页</div>
+        <div class="tag">搜索</div>
+        <div class="tag" id="theme-toggle">light</div>
+    </div>
+</header>
+
+<div class="header-background">
+</div>
+
+<div class="container main-content mt-4" id="post-container">
+    <!-- 博客内容将被渲染到这里 -->
+</div>
+
+<!-- 新增/编辑博客表单 -->
+<div class="container mt-4">
+    <h2>新增/编辑博客</h2>
+    <form id="blog-form">
+        <div class="mb-3">
+            <label for="blog-title" class="form-label">标题</label>
+            <input type="text" class="form-control" id="blog-title" required>
+        </div>
+        <div class="mb-3">
+            <label for="blog-content" class="form-label">内容</label>
+            <textarea class="form-control" id="blog-content" rows="10" required></textarea>
+        </div>
+        <div class="mb-3">
+            <label for="category-tree" class="form-label">选择类目</label>
+            <div id="category-tree"></div>
+        </div>
+        <button type="submit" class="btn btn-primary">保存</button>
+    </form>
+</div>
+
+<!-- 目录容器 -->
+<div class="toc" id="toc">
+    <h2>目录</h2>
+    <ul id="toc-list"></ul>
+</div>
+
+<footer>&copy; 2025 bander 博客v2.0</footer>
+
+<script src="/static/js/jquery-3.6.0.min.js"></script>
+<script src="/static/js/bootstrap.bundle_5_3.min.js"></script>
+<script src="/static/js/marked.min.js"></script>
+<script src="/static/js/highlight.min.js"></script>
+<script src="https://unpkg.com/easymde@2.18.0/dist/easymde.min.js"></script>
+<script src="/static/js/bootstrap-treeview_1_2.min.js"></script>
+<script>
+    var prefix_url = "";
+
+    function setCookie(name, value, days) {
+        let expires = "";
+        if (days) {
+            let date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toUTCString();
+        }
+        document.cookie = name + "=" + (value || "") + expires + "; path=/";
+    }
+
+    function getCookie(name) {
+        let nameEQ = name + "=";
+        let ca = document.cookie.split(';');
+        for (let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+
+    const themeModule = (function () {
+        const themeToggle = $('#theme-toggle');
+        let currentTheme = getCookie('theme') || 'light';
+
+        const lightTheme = {
+            bodyBg: '#f4f5f7',
+            bodyColor: '#333',
+            cardBg: 'white',
+            cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+            textColor: '#666',
+            tocBg: '#fff',
+            tocBorder: '#ddd',
+            tocTextColor: '#333'
+        };
+
+        const darkTheme = {
+            bodyBg: '#121212',
+            bodyColor: '#eee',
+            cardBg: '#1e1e1e',
+            cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
+            textColor: '#aaa',
+            tocBg: '#1e1e1e',
+            tocBorder: '#555',
+            tocTextColor: '#ddd'
+        };
+
+        function applyTheme(theme) {
+            const themeData = theme === 'dark' ? darkTheme : lightTheme;
+            $('body').css({'background-color': themeData.bodyBg, 'color': themeData.bodyColor});
+            $('.post-card').css({'background-color': themeData.cardBg, 'box-shadow': themeData.cardShadow});
+            $('.post-description').css('color', themeData.textColor);
+            $('.toc').css({
+                'background-color': themeData.tocBg,
+                'border-color': themeData.tocBorder,
+                'color': themeData.tocTextColor
+            });
+            $('.toc a').css('color', themeData.tocTextColor);
+        }
+
+        function init() {
+            applyTheme(currentTheme);
+            themeToggle.click(function () {
+                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+                applyTheme(currentTheme);
+                themeToggle.text(currentTheme);
+                setCookie('theme', currentTheme, 365);
+            });
+        }
+
+        return {init};
+    })();
+
+    const tagModule = (function () {
+        const tags = document.querySelectorAll('header .tag');
+
+        function bindTagEvents() {
+            tags.forEach(tag => {
+                tag.addEventListener('click', function () {
+                    console.log('Clicked tag:', this.textContent);
+                    if (this.textContent === "搜索") {
+                        window.open('/static/search.html');
+                    } else if (this.textContent === "主页") {
+                        window.open('/static/index.html');
+                    } else if (this.textContent === "dark" || this.textContent === "light") {
+                        themeModule.init();
+                    }
+                });
+            });
+        }
+
+        function init() {
+            bindTagEvents();
+        }
+
+        return {init}
+    })();
+
+    function generateTOC() {
+        const tocList = $('#toc-list');
+        tocList.empty();
+
+        const headers = $('.post-content').find('h1, h2, h3, h4, h5, h6');
+        let currentLevel = 1;
+        let currentList = tocList;
+
+        headers.each(function () {
+            const tag = $(this).prop('tagName').toLowerCase();
+            const level = parseInt(tag[1]);
+            const text = $(this).text();
+            const id = text.toLowerCase().replace(/\s+/g, '-');
+
+            $(this).attr('id', id);
+
+            if (level > currentLevel) {
+                const newList = $('<ul></ul>');
+                currentList.append(newList);
+                currentList = newList;
+            } else if (level < currentLevel) {
+                currentList = currentList.parent();
+            }
+
+            currentList.append(`<li class="toc-${tag}"><a href="#${id}">${text}</a></li>`);
+            currentLevel = level;
+        });
+
+        // 平滑滚动效果
+        $('#toc-list a').on('click', function (event) {
+            event.preventDefault();
+            $('html, body').animate({
+                scrollTop: $($.attr(this, 'href')).offset().top
+            }, 500);
+        });
+    }
+
+    function observeContentChanges() {
+        const targetNode = document.getElementById('post-container');
+        const config = {childList: true, subtree: true};
+
+        const callback = function (mutationsList, observer) {
+            for (let mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    generateTOC();
+                    break;
+                }
+            }
+        };
+
+        const observer = new MutationObserver(callback);
+        observer.observe(targetNode, config);
+    }
+
+    $(document).ready(function () {
+        tagModule.init();
+        themeModule.init();
+
+        // 获取 URL 中的博客 ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const blogId = urlParams.get('id');
+
+        // 请求博客内容
+        $.get(`${prefix_url}/get_one_blog/${blogId}`, function (data) {
+            const postContainer = $('#post-container');
+            const {title, create_time, /*views,浏览次数: ${views}*/ markdown} = data.message;
+
+            // 渲染博客内容
+            const postHtml = `
+                <div class="post-title">${title}</div>
+                <div class="post-meta">发布时间: ${create_time} | </div>
+                <div class="post-content">${marked.parse(markdown)}</div>
+            `;
+            postContainer.html(postHtml);
+
+            // 生成目录
+            generateTOC();
+
+            // 代码高亮
+            document.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightBlock(block);
+            });
+
+            // 监听内容变化
+            observeContentChanges();
+        });
+
+        // 初始化 EasyMDE
+        const easyMDE = new EasyMDE({element: document.getElementById('blog-content')});
+
+        // 初始化类目树
+        const treeData = [
+            {
+                text: "一级类目1",
+                nodes: [
+                    {
+                        text: "二级类目1-1",
+                        nodes: [
+                            {text: "三级类目1-1-1"},
+                            {text: "三级类目1-1-2"}
+                        ]
+                    },
+                    {
+                        text: "二级类目1-2",
+                        nodes: [
+                            {text: "三级类目1-2-1"},
+                            {text: "三级类目1-2-2"}
+                        ]
+                    }
+                ]
+            },
+            {
+                text: "一级类目2",
+                nodes: [
+                    {
+                        text: "二级类目2-1",
+                        nodes: [
+                            {text: "三级类目2-1-1"},
+                            {text: "三级类目2-1-2"}
+                        ]
+                    },
+                    {
+                        text: "二级类目2-2",
+                        nodes: [
+                            {text: "三级类目2-2-1"},
+                            {text: "三级类目2-2-2"}
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        $('#category-tree').treeview({
+            data: treeData,
+            multiSelect: false,
+            onNodeSelected: function (event, node) {
+                // 处理节点选择事件
+                console.log('Selected node:', node.text);
+            }
+        });
+
+        // 处理表单提交
+        $('#blog-form').on('submit', function (event) {
+            event.preventDefault();
+
+            const title = $('#blog-title').val();
+            const content = easyMDE.value();
+            const selectedNode = $('#category-tree').treeview('getSelected')[0];
+
+            if (!selectedNode) {
+                alert('请选择一个类目');
+                return;
+            }
+
+            const category = selectedNode.text;
+
+            // 发送保存请求
+            $.post('/save_blog', {
+                title: title,
+                content: content,
+                category: category
+            }, function (response) {
+                if (response.success) {
+                    alert('博客保存成功');
+                    // 重定向到博客列表页面或其他操作
+                } else {
+                    alert('博客保存失败');
+                }
+            });
+        });
+    })
+        ;
+</script>
+</body>
+</html>

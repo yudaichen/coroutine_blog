@@ -1,0 +1,13 @@
+database:
+  host: "127.0.0.1"
+  port: 3306
+  username: "root"
+  password: "12345678"
+  database: "blog"
+
+server:
+  address: "127.0.0.1"
+  port: 8080
+  doc_root: "/mnt/h/study/cpp/import_std_23"
+  threads: 2
+  protocol: "HTTP"
