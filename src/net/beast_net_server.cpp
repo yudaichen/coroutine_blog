@@ -417,7 +417,10 @@ namespace fast::net
 
         std::cout << "Received signal: " << sig << "\n";
         std::cout << "Gracefully cancelling child tasks...\n";
+
         task_group.emit(asio::cancellation_type::total);
+        std::cout << "Emitted total cancellation signal.\n"; // Logging (Improvement 4)
+
 
         // 等待所有任务完成
         auto [ec] = co_await task_group.async_wait(
@@ -425,13 +428,20 @@ namespace fast::net
 
         if (ec == boost::asio::error::operation_aborted)
         {
+            std::cout << "Graceful cancellation timed out after 5 seconds.\n"; // Logging (Improvement 4)
             std::cout << "Sending a terminal cancellation signal...\n";
             task_group.emit(asio::cancellation_type::terminal);
+            std::cout << "Emitted terminal cancellation signal.\n"; // Logging (Improvement 4)
             co_await task_group.async_wait();
         }
 
-        std::cout << "Child tasks completed.\n";
+        std::cout << "Child tasks completed.\n"; // Logging (Improvement 4)
+
+        session_timers_.clear(); // Clear session timers (Improvement 2 - Precautionary)
+        sessions_.clear();      // Clear sessions (Improvement 2 - Precautionary)
+
         ioc.stop();
+        std::cout << "io_context stopped.\n"; // Logging (Improvement 4)
     }
 
     fast::net::SessionData& fast::net::Server::get_or_create_session(const std::string& ip)

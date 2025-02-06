@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>bander 博客 (Vue.js 首页)</title>
+    <title>bander 博客 (Vue.js 文章页)</title>
     <link href="/static/css/bootstrap_5_3.min.css" rel="stylesheet">
+    <link href="/static/css/highlight_11_3_1.css" rel="stylesheet">
     <style>
         /* 样式保持不变，直接从之前的 style.css 复制过来 (内容省略，与之前版本相同) */
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
@@ -18,12 +19,14 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            overflow-x: hidden; /* 避免水平滚动条 */
+            transition: background-color 0.5s ease, color 0.5s ease; /* 添加body背景和颜色过渡 */
         }
 
         header {
             background: transparent;
             color: white;
-            padding: 1rem;
+            padding: 1rem 2rem; /* 增加左右padding，避免太贴边 */
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -31,7 +34,7 @@
             width: 100%;
             top: 0;
             z-index: 1000;
-            transition: color 0.3s;
+            transition: color 0.5s ease, background-color 0.5s ease; /* 添加header颜色和背景过渡 */
         }
 
         .header-background {
@@ -40,6 +43,7 @@
             background-position: center;
             height: 20vh;
             position: relative;
+            transition: height 0.5s ease; /* 添加高度过渡 */
         }
 
         @keyframes textAnimation {
@@ -57,7 +61,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            transition: color 0.3s;
+            transition: color 0.5s ease; /* 添加blog-title颜色过渡 */
         }
 
         .tags {
@@ -69,110 +73,151 @@
             justify-content: center;
             background: transparent;
             color: white;
-            transition: color 0.3s;
+            transition: color 0.5s ease; /* 添加tags颜色过渡 */
         }
 
         .tag {
-            margin: 0 5px;
-            padding: 5px 10px;
+            margin: 0.5rem 0.5rem; /* 增加垂直margin，调整间距 */
+            padding: 0.5rem 1rem; /* 增加垂直padding，调整大小 */
             border-radius: 12px;
             cursor: pointer;
             white-space: nowrap;
+            transition: background-color 0.3s ease, color 0.3s ease; /* 添加tag背景和颜色过渡 */
         }
 
         .tag:hover {
-            background-color: white;
+            background-color: rgba(255, 255, 255, 0.8); /* 鼠标悬停时背景颜色略微透明 */
             color: #1e1e1e;
         }
 
-        .post-container {
-            padding: 1rem;
+        .container {
+            padding: 2rem; /* 增加容器padding，内容更宽松 */
             max-width: 960px;
             margin: 0 auto;
-        }
-
-        .post-card {
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 1.5rem;
-            padding: 1.5rem;
-        }
-
-        .post-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-        }
-
-        .post-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: padding 0.5s ease; /* 添加container padding过渡 */
         }
 
         .post-title {
-            font-size: 1.5rem;
+            font-size: 2.5rem; /* 增大标题字体 */
             font-weight: bold;
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
+            transition: font-size 0.3s ease; /* 添加post-title字体大小过渡 */
         }
 
-        .post-description {
-            font-size: 1rem;
-            color: #666;
+        .post-meta {
+            font-size: 1.1rem; /* 增大meta字体 */
+            color: #777; /* 颜色稍微加深 */
+            margin-bottom: 2rem; /* 增加底部margin */
+            transition: color 0.5s ease; /* 添加post-meta颜色过渡 */
         }
 
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        .post-content {
+            font-size: 1.1rem; /* 增大内容字体 */
+            line-height: 1.7; /* 增加行高 */
+            transition: font-size 0.3s ease, line-height 0.3s ease; /* 添加post-content字体和行高过渡 */
         }
 
-        .content {
-            flex: 1;
-            display: flex;
-            justify-content: center;
+        .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6 {
+            margin-top: 1.5em; /* 增加标题上边距 */
+            margin-bottom: 0.5em; /* 增加标题下边距 */
+            font-weight: bold;
+            transition: margin-top 0.3s ease, margin-bottom 0.3s ease; /* 添加内容标题margin过渡 */
+        }
+
+        .post-content p, .post-content ul, .post-content ol {
+            margin-bottom: 1em; /* 段落和列表底部间距 */
+            transition: margin-bottom 0.3s ease; /* 添加内容段落/列表margin过渡 */
         }
 
         footer {
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 1rem;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem; /* 增加footer padding */
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); /* 阴影更柔和 */
             margin-top: auto;
+            transition: padding 0.5s ease, box-shadow 0.5s ease; /* 添加footer padding和阴影过渡 */
+            background-color: #f4f5f7; /* 确保footer背景色与body一致 */
+            color: #333; /* 确保footer文字颜色与body一致 */
         }
 
         @media (max-width: 768px) {
-            header .header-content {
+            header {
+                padding: 1rem; /* 移动端header padding 减小 */
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: center; /* 移动端header居中对齐 */
+            }
+
+            header .blog-title {
+                margin-bottom: 0.5rem; /* 移动端标题下边距 */
+                font-size: 1.7rem; /* 移动端标题字体 */
             }
 
             header .tags {
-                margin-top: 10px;
-                margin-bottom: 10px;
+                margin-top: 0; /* 移动端tags上边距 */
+                margin-bottom: 0; /* 移动端tags下边距 */
+                justify-content: center; /* 移动端tags居中 */
+            }
+
+            .container {
+                padding: 1.5rem; /* 移动端容器padding 减小 */
+            }
+
+            .post-title {
+                font-size: 2rem; /* 移动端文章标题字体 */
+            }
+
+            .toc {
+                display: none; /* 移动端默认隐藏目录 */
             }
         }
 
-        @media (max-width: 992px) {
-            .col-lg-9 {
-                width: 100%;
-            }
+        /* 目录样式 */
+        .toc {
+            position: fixed;
+            top: 120px; /* 目录位置稍微下移，考虑header高度 */
+            right: 20px;
+            width: 220px; /* 目录宽度稍微增加 */
+            max-height: 70vh; /* 目录最大高度稍微降低 */
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.9); /* 目录背景稍微透明 */
+            border: 1px solid #eee; /* 目录边框更淡 */
+            padding: 15px; /* 目录padding 增加 */
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.05); /* 目录阴影更柔和 */
+            border-radius: 10px; /* 目录圆角 */
+            transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease; /* 添加toc背景、边框和颜色过渡 */
         }
 
-        .search-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
+        .toc h2 {
+            font-size: 1.3rem; /* 目录标题字体稍微增大 */
+            margin-top: 0;
+            margin-bottom: 0.8rem; /* 目录标题下边距 */
+            color: #555; /* 目录标题颜色稍微深一些 */
+            transition: color 0.5s ease; /* 添加toc h2颜色过渡 */
         }
 
-        .search-box {
-            width: 50%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
         }
 
-        .search-results {
-            margin-top: 20px;
+        .toc li {
+            margin-bottom: 8px; /* 目录列表项下边距 */
+        }
+
+        .toc a {
+            text-decoration: none;
+            color: #666; /* 目录链接颜色稍微深一些 */
+            display: block; /* 使链接占据整行，方便点击 */
+            padding: 0.3rem 0; /* 增加链接垂直padding */
+            border-radius: 5px; /* 链接圆角 */
+            transition: color 0.3s ease, background-color 0.3s ease; /* 添加toc a颜色和背景过渡 */
+        }
+
+        .toc a:hover {
+            text-decoration: none; /* 移除默认下划线 */
+            background-color: rgba(0, 0, 0, 0.05); /* 鼠标悬停时背景颜色 */
+            color: #333; /* 鼠标悬停时文字颜色 */
         }
     </style>
 </head>
@@ -187,30 +232,25 @@
     <div class="header-background">
     </div>
 
-    <div class="container main-content mt-4">
-        <div class="row justify-content-center content">
-            <div class="col-lg-9 post-container" id="post-container">
-                <search-component @search-posts="searchPosts"></search-component>
-                <div class="search-results" id="search-results">
-                    <post-card-component
-                            v-for="post in posts"
-                            :key="post.article_id"
-                            :post="post"
-                    ></post-card-component>
-                    <p v-if="noMorePosts" class="text-center">没有更多文章了</p>
-                    <p v-if="loadingPosts" class="text-center">加载中...</p>
-                    <p v-if="loadPostsError" class="text-danger text-center">加载文章失败</p>
-                </div>
-            </div>
-        </div>
+    <div class="container main-content mt-4" id="post-container">
+        <post-content-component
+                :post-title="postTitle"
+                :post-meta="postMeta"
+                :post-content-html="postContentHtml"
+                @content-updated="updateTocList"
+        ></post-content-component>
     </div>
+
+    <toc-component :toc-list="tocList"></toc-component>
 
     <footer>&copy; 2025 bander 博客v2.0</footer>
 </div>
 
 <script src="/static/js/jquery-3.6.0.min.js"></script>
 <script src="/static/js/bootstrap.bundle_5_3.min.js"></script>
-<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="/static/js/marked.min.js"></script>
+<script src="/static/js/highlight.min.js"></script>
+<script src="/static/js/vue.global.prod.js"></script>
 <script>
     const prefix_url = "";
 
@@ -223,11 +263,9 @@
         cardBg: 'white',
         cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
         textColor: '#666',
-        sidebarBg: 'white',
-        sidebarLiColor: '#333',
-        sidebarLineColor: '#ddd',
-        treeviewBg: '#f4f5f7',
-        treeviewColor: '#333'
+        tocBg: '#fff',
+        tocBorder: '#ddd',
+        tocTextColor: '#333'
     };
 
     const darkTheme = {
@@ -236,11 +274,9 @@
         cardBg: '#1e1e1e',
         cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
         textColor: '#aaa',
-        sidebarBg: '#1e1e1e',
-        sidebarLiColor: '#ddd',
-        sidebarLineColor: '#555',
-        treeviewBg: '#1e1e1e',
-        treeviewColor: '#ddd'
+        tocBg: '#1e1e1e',
+        tocBorder: '#555',
+        tocTextColor: '#ddd'
     };
 
     // --- HeaderComponent 组件 (保持不变) ---
@@ -273,35 +309,70 @@
         }
     };
 
-    // --- PostCardComponent 组件 (保持不变) ---
-    const PostCardComponent = {
+    // --- PostContentComponent 组件 ---
+    const PostContentComponent = {
         template: `
-          <div class="post-card" data-aos="fade-up" @click="goToBlog(post.article_id)">
-            <h2 class="post-title">{{ post.title }}</h2>
-            <p class="post-description">{{ post.content_preview.substring(0, 100) + "..." }}</p>
+          <div>
+            <div class="post-title">{{ postTitle }}</div>
+            <div class="post-meta">{{ postMeta }}</div>
+            <div class="post-content" v-html="postContentHtml"></div>
           </div>
         `,
         props: {
-            post: Object
+            postTitle: String,
+            postMeta: String,
+            postContentHtml: String
         },
-        methods: {
-            goToBlog(articleId) {
-                window.open('/static/blog.html?id=' + articleId);
+        emits: ['content-updated'], //  新增 emit，声明内容更新事件
+        watch: {
+            postContentHtml() {
+                this.$nextTick(() => {
+                    document.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightBlock(block);
+                    });
+                    this.$emit('content-updated'); //  在内容更新后 emit 事件
+                });
             }
         }
     };
 
-    // --- SearchComponent 组件 ---
-    const SearchComponent = {
+    // --- TocComponent 组件 ---
+    const TocComponent = {
         template: `
-          <div class="search-container">
-            <input type="text" id="search-box" class="search-box" placeholder="搜索..." @keyup.enter="handleSearch" ref="searchInput"/>
+          <div class="toc" id="toc">
+            <h2>目录</h2>
+            <ul id="toc-list">
+              <li v-for="item in tocList" :key="item.id" :class="'toc-' + item.tag">
+                <a :href="'#' + item.id">{{ item.text }}</a>
+              </li>
+            </ul>
           </div>
         `,
-        emits: ['search-posts'],
+        props: {
+            tocList: Array
+        },
+        watch: {
+            tocList() {
+                this.$nextTick(() => {
+                    this.smoothScroll();
+                });
+            }
+        },
         methods: {
-            handleSearch() {
-                this.$emit('search-posts', this.$refs.searchInput.value);
+            smoothScroll() {
+                this.$el.querySelectorAll('#toc-list a').forEach(anchor => {
+                    anchor.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        const targetId = this.getAttribute('href').substring(1);
+                        const targetElement = document.getElementById(targetId);
+                        if (targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 100, // 调整偏移量，避开 header
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                });
             }
         }
     };
@@ -314,12 +385,10 @@
                 theme: 'light',
                 themeText: 'light',
                 blogTitle: 'bander 博客',
-                posts: [],
-                currentPage: 1,
-                isLoading: false,
-                allPostsLoaded: false,
-                loadPostsError: false,
-                searchQuery: '',
+                postTitle: '',
+                postMeta: '',
+                postContentHtml: '',
+                tocList: [],
                 lightTheme: lightTheme,
                 darkTheme: darkTheme
             };
@@ -327,12 +396,6 @@
         computed: {
             currentThemeData() {
                 return this.theme === 'light' ? this.lightTheme : this.darkTheme;
-            },
-            noMorePosts() {
-                return this.allPostsLoaded && this.posts.length > 0;
-            },
-            loadingPosts() {
-                return this.isLoading;
             }
         },
         watch: {
@@ -345,9 +408,8 @@
         },
         mounted() {
             this.initTheme();
-            this.loadPosts();
+            this.initBlogPost();
             this.headerScrollListener();
-            this.infiniteScrollListener();
         },
         methods: {
             // --- 主题模块 (保持不变，Vue 版本) ---
@@ -366,11 +428,9 @@
                 root.style.setProperty('--card-bg', themeData.cardBg);
                 root.style.setProperty('--card-shadow', themeData.cardShadow);
                 root.style.setProperty('--text-color', themeData.textColor);
-                root.style.setProperty('--sidebar-bg', themeData.sidebarBg);
-                root.style.setProperty('--sidebar-li-color', themeData.sidebarLiColor);
-                root.style.setProperty('--sidebar-line-color', themeData.sidebarLineColor);
-                root.style.setProperty('--treeview-bg', themeData.treeviewBg);
-                root.style.setProperty('--treeview-color', themeData.treeviewColor);
+                root.style.setProperty('--toc-bg', themeData.tocBg);
+                root.style.setProperty('--toc-border', themeData.tocBorder);
+                root.style.setProperty('--toc-text-color', themeData.tocTextColor);
             },
             toggleTheme() {
                 this.theme = this.theme === 'light' ? 'dark' : 'light';
@@ -406,55 +466,45 @@
                 window.open('/static/search.html');
             },
 
-            // --- 博客文章模块 (Vue 版本) ---
-            async loadPosts(page = 1) {
-                if (this.isLoading || this.allPostsLoaded) return;
-                this.isLoading = true;
-                this.loadPostsError = false;
 
-                let url = `${prefix_url}/blog_full_text/${page}/15`;
-                console.log("loadPosts called, URL:", url, "query:", this.searchQuery); // ADDED
+            // ---  博客文章模块 (Vue 版本) ---
+            initBlogPost() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const blogId = urlParams.get('id');
 
-                try {
-                    const response = await $.post(url, JSON.stringify({blog_full_text: this.searchQuery}), null, 'json');
-                    console.log("loadPosts response:", response); // ADDED
-                    if (response && response.message && response.message.length > 0) {
-                        if (page === 1) {
-                            this.posts = response.message;
+                fetch(`${prefix_url}/get_one_blog/${blogId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            const post = data.message;
+                            this.postTitle = post.title;
+                            this.postMeta = `发布时间: ${post.create_time} | `;
+                            this.postContentHtml = marked.parse(post.markdown);
+                            this.generateTocList(); //  在文章内容加载后生成目录 (初始生成)
                         } else {
-                            this.posts = this.posts.concat(response.message);
+                            console.error("加载博客文章失败:", data);
+                            this.postContentHtml = '<p>加载文章失败</p>';
                         }
-                        this.currentPage = page + 1;
-                        if (response.message.length < 15) { // Assuming 15 is the page size
-                            this.allPostsLoaded = true;
-                        }
-                    } else {
-                        this.allPostsLoaded = true;
-                        if (page === 1) {
-                            this.posts = []; // No posts on first page, clear existing
-                        }
-                    }
-                } catch (error) {
-                    console.error("加载文章失败:", error);
-                    this.loadPostsError = true;
-                } finally {
-                    this.isLoading = false;
-                }
+                    })
+                    .catch(error => {
+                        console.error("请求博客文章错误:", error);
+                        this.postContentHtml = '<p>加载文章失败</p>';
+                    });
             },
-            searchPosts(query) {
-                console.log("searchPosts called with query:", query); // ADDED
-                this.searchQuery = query;
-                this.currentPage = 1;
-                this.allPostsLoaded = false;
-                this.posts = []; // Clear existing posts before new search
-                this.loadPosts(1);
-            },
-            infiniteScrollListener() {
-                window.addEventListener('scroll', () => {
-                    if (window.scrollY + window.innerHeight > document.documentElement.scrollHeight - 200 && !this.isLoading && !this.allPostsLoaded) {
-                        this.loadPosts(this.currentPage);
-                    }
+            generateTocList() {
+                const headers = document.querySelector('.post-content').querySelectorAll('h1, h2, h3, h4, h5, h6');
+                let tocData = [];
+                headers.forEach(header => {
+                    const tag = header.tagName.toLowerCase();
+                    const text = header.textContent;
+                    const id = text.toLowerCase().replace(/\s+/g, '-');
+                    header.setAttribute('id', id); //  设置 header 的 id 属性
+                    tocData.push({ tag: tag, text: text, id: id });
                 });
+                this.tocList = tocData;
+            },
+            updateTocList() { //  新增方法，用于更新目录
+                this.generateTocList();
             },
 
 
@@ -475,8 +525,8 @@
         },
         components: {
             HeaderComponent,
-            PostCardComponent,
-            SearchComponent
+            PostContentComponent,
+            TocComponent
         }
     }).mount('#app');
 </script>
