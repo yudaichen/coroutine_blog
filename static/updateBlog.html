@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>bander 博客</title>
+    <title>bander 博客 - 编辑博客</title>
     <link href="/static/css/bootstrap_5_3.min.css" rel="stylesheet">
     <link href="/static/css/highlight_11_3_1.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
-    <link href="/static/css/bootstrap-treeview_1_2_0.min.css"
-          rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/easymde.min.css">
+    <link href="/static/css/bootstrap-treeview_1_2_0.min.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
 
@@ -17,7 +16,7 @@
             color: #333;
             font-family: 'Comic Neue', cursive;
             margin: 0;
-            font-size: 18px; /* 调整字体大小 */
+            font-size: 18px;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -38,10 +37,10 @@
         }
 
         .header-background {
-            background-image: url('/static/back.png'); /* 替换为您的背景图片路径 */
+            background-image: url('/static/back.png');
             background-size: cover;
             background-position: center;
-            height: 20vh; /* 占据屏幕五分之三的高度 */
+            height: 20vh;
             position: relative;
         }
 
@@ -132,369 +131,369 @@
             }
         }
 
-        /* 目录样式 */
-        .toc {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            width: 200px;
-            max-height: 80vh;
-            overflow-y: auto;
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .toc h2 {
-            font-size: 1.2rem;
-            margin-top: 0;
-        }
-
-        .toc ul {
-            list-style: none;
-            padding-left: 0;
-        }
-
-        .toc li {
-            margin-bottom: 5px;
-        }
-
-        .toc a {
-            text-decoration: none;
-            color: #333;
-        }
-
-        .toc a:hover {
-            text-decoration: underline;
-        }
     </style>
 </head>
 <body>
-<div id="particles-js"></div>
-<header class="blog-header">
-    <div class="blog-title">bander 博客</div>
-    <div class="tags">
-        <div class="tag">主页</div>
-        <div class="tag">搜索</div>
-        <div class="tag" id="theme-toggle">light</div>
+<div id="app">
+    <header-component
+            :blog-title="blogTitle"
+            :theme-text="themeText"
+            @toggle-theme="toggleTheme"
+            @go-to-home="goToHome"
+            @go-to-search="goToSearch"
+    ></header-component>
+
+    <div class="header-background">
     </div>
-</header>
 
-<div class="header-background">
+    <div class="container main-content mt-4" id="post-container">
+        <blog-form-component></blog-form-component>
+    </div>
+
+    <footer>&copy; 2025 bander 博客v2.0</footer>
 </div>
-
-<div class="container main-content mt-4" id="post-container">
-    <!-- 博客内容将被渲染到这里 -->
-</div>
-
-<!-- 新增/编辑博客表单 -->
-<div class="container mt-4">
-    <h2>新增/编辑博客</h2>
-    <form id="blog-form">
-        <div class="mb-3">
-            <label for="blog-title" class="form-label">标题</label>
-            <input type="text" class="form-control" id="blog-title" required>
-        </div>
-        <div class="mb-3">
-            <label for="blog-content" class="form-label">内容</label>
-            <textarea class="form-control" id="blog-content" rows="10" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="category-tree" class="form-label">选择类目</label>
-            <div id="category-tree"></div>
-        </div>
-        <button type="submit" class="btn btn-primary">保存</button>
-    </form>
-</div>
-
-<!-- 目录容器 -->
-<div class="toc" id="toc">
-    <h2>目录</h2>
-    <ul id="toc-list"></ul>
-</div>
-
-<footer>&copy; 2025 bander 博客v2.0</footer>
 
 <script src="/static/js/jquery-3.6.0.min.js"></script>
 <script src="/static/js/bootstrap.bundle_5_3.min.js"></script>
+<script src="/static/js/vue.global.prod.js"></script>
 <script src="/static/js/marked.min.js"></script>
 <script src="/static/js/highlight.min.js"></script>
-<script src="https://unpkg.com/easymde@2.18.0/dist/easymde.min.js"></script>
+<script src="/static/js/easymde.min.js"></script>
 <script src="/static/js/bootstrap-treeview_1_2.min.js"></script>
 <script>
-    var prefix_url = "";
+    const prefix_url = "";
 
-    function setCookie(name, value, days) {
-        let expires = "";
-        if (days) {
-            let date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/";
-    }
+    const {createApp, ref, reactive, computed, onMounted, watch} = Vue;
 
-    function getCookie(name) {
-        let nameEQ = name + "=";
-        let ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
-    }
+    // ---  主题数据 ---
+    const lightTheme = {
+        bodyBg: '#f4f5f7',
+        bodyColor: '#333',
+        cardBg: 'white',
+        cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        textColor: '#666',
+        tocBg: '#fff',
+        tocBorder: '#ddd',
+        tocTextColor: '#333'
+    };
 
-    const themeModule = (function () {
-        const themeToggle = $('#theme-toggle');
-        let currentTheme = getCookie('theme') || 'light';
+    const darkTheme = {
+        bodyBg: '#121212',
+        bodyColor: '#eee',
+        cardBg: '#1e1e1e',
+        cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
+        textColor: '#aaa',
+        tocBg: '#1e1e1e',
+        tocBorder: '#555',
+        tocTextColor: '#ddd'
+    };
 
-        const lightTheme = {
-            bodyBg: '#f4f5f7',
-            bodyColor: '#333',
-            cardBg: 'white',
-            cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            textColor: '#666',
-            tocBg: '#fff',
-            tocBorder: '#ddd',
-            tocTextColor: '#333'
-        };
-
-        const darkTheme = {
-            bodyBg: '#121212',
-            bodyColor: '#eee',
-            cardBg: '#1e1e1e',
-            cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
-            textColor: '#aaa',
-            tocBg: '#1e1e1e',
-            tocBorder: '#555',
-            tocTextColor: '#ddd'
-        };
-
-        function applyTheme(theme) {
-            const themeData = theme === 'dark' ? darkTheme : lightTheme;
-            $('body').css({'background-color': themeData.bodyBg, 'color': themeData.bodyColor});
-            $('.post-card').css({'background-color': themeData.cardBg, 'box-shadow': themeData.cardShadow});
-            $('.post-description').css('color', themeData.textColor);
-            $('.toc').css({
-                'background-color': themeData.tocBg,
-                'border-color': themeData.tocBorder,
-                'color': themeData.tocTextColor
-            });
-            $('.toc a').css('color', themeData.tocTextColor);
-        }
-
-        function init() {
-            applyTheme(currentTheme);
-            themeToggle.click(function () {
-                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-                applyTheme(currentTheme);
-                themeToggle.text(currentTheme);
-                setCookie('theme', currentTheme, 365);
-            });
-        }
-
-        return {init};
-    })();
-
-    const tagModule = (function () {
-        const tags = document.querySelectorAll('header .tag');
-
-        function bindTagEvents() {
-            tags.forEach(tag => {
-                tag.addEventListener('click', function () {
-                    console.log('Clicked tag:', this.textContent);
-                    if (this.textContent === "搜索") {
-                        window.open('/static/search.html');
-                    } else if (this.textContent === "主页") {
-                        window.open('/static/index.html');
-                    } else if (this.textContent === "dark" || this.textContent === "light") {
-                        themeModule.init();
+    // --- CategoryTreeComponent 组件 ---  (Defined FIRST)
+    const CategoryTreeComponent = {
+        template: `<div id="category-tree"></div>`,
+        emits: ['category-selected'],
+        mounted() {
+            console.log("CategoryTreeComponent mounted"); // 调试信息
+            this.initCategoryTree();
+        },
+        methods: {
+            initCategoryTree() {
+                $.get(prefix_url + '/get_blog_columns')
+                    .done((data) => {
+                        console.log("initCategoryTree API response:", data); // 调试信息
+                        if (data.message && data.message.length > 0) {
+                            const treeData = this.generateCategoryList(data.message);
+                            $('#category-tree').treeview({
+                                data: treeData,
+                                levels: 1,
+                                expandIcon: 'bi bi-chevron-right',
+                                collapseIcon: 'bi bi-chevron-down',
+                                nodeIcon: 'bi bi-folder',
+                                selectedIcon: 'bi bi-check',
+                                showTags: true,
+                                onNodeSelected: (event, node) => {
+                                    this.$emit('category-selected', node);
+                                }
+                            });
+                        } else {
+                            console.warn("API 返回数据为空数组:", data);
+                            $('#category-tree').text("暂无数据");
+                        }
+                    }).fail((jqXHR, textStatus, errorThrown) => {
+                    console.error("initCategoryTree API error:", textStatus, errorThrown);
+                    $('#category-tree').text("加载数据失败: " + textStatus);
+                    if (jqXHR.status === 404) {
+                        $('#category-tree').text("未找到数据");
+                    } else if (jqXHR.status === 500) {
+                        $('#category-tree').text("服务器内部错误");
                     }
                 });
-            });
-        }
-
-        function init() {
-            bindTagEvents();
-        }
-
-        return {init}
-    })();
-
-    function generateTOC() {
-        const tocList = $('#toc-list');
-        tocList.empty();
-
-        const headers = $('.post-content').find('h1, h2, h3, h4, h5, h6');
-        let currentLevel = 1;
-        let currentList = tocList;
-
-        headers.each(function () {
-            const tag = $(this).prop('tagName').toLowerCase();
-            const level = parseInt(tag[1]);
-            const text = $(this).text();
-            const id = text.toLowerCase().replace(/\s+/g, '-');
-
-            $(this).attr('id', id);
-
-            if (level > currentLevel) {
-                const newList = $('<ul></ul>');
-                currentList.append(newList);
-                currentList = newList;
-            } else if (level < currentLevel) {
-                currentList = currentList.parent();
-            }
-
-            currentList.append(`<li class="toc-${tag}"><a href="#${id}">${text}</a></li>`);
-            currentLevel = level;
-        });
-
-        // 平滑滚动效果
-        $('#toc-list a').on('click', function (event) {
-            event.preventDefault();
-            $('html, body').animate({
-                scrollTop: $($.attr(this, 'href')).offset().top
-            }, 500);
-        });
-    }
-
-    function observeContentChanges() {
-        const targetNode = document.getElementById('post-container');
-        const config = {childList: true, subtree: true};
-
-        const callback = function (mutationsList, observer) {
-            for (let mutation of mutationsList) {
-                if (mutation.type === 'childList') {
-                    generateTOC();
-                    break;
-                }
-            }
-        };
-
-        const observer = new MutationObserver(callback);
-        observer.observe(targetNode, config);
-    }
-
-    $(document).ready(function () {
-        tagModule.init();
-        themeModule.init();
-
-        // 获取 URL 中的博客 ID
-        const urlParams = new URLSearchParams(window.location.search);
-        const blogId = urlParams.get('id');
-
-        // 请求博客内容
-        $.get(`${prefix_url}/get_one_blog/${blogId}`, function (data) {
-            const postContainer = $('#post-container');
-            const {title, create_time, /*views,浏览次数: ${views}*/ markdown} = data.message;
-
-            // 渲染博客内容
-            const postHtml = `
-                <div class="post-title">${title}</div>
-                <div class="post-meta">发布时间: ${create_time} | </div>
-                <div class="post-content">${marked.parse(markdown)}</div>
-            `;
-            postContainer.html(postHtml);
-
-            // 生成目录
-            generateTOC();
-
-            // 代码高亮
-            document.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightBlock(block);
-            });
-
-            // 监听内容变化
-            observeContentChanges();
-        });
-
-        // 初始化 EasyMDE
-        const easyMDE = new EasyMDE({element: document.getElementById('blog-content')});
-
-        // 初始化类目树
-        const treeData = [
-            {
-                text: "一级类目1",
-                nodes: [
-                    {
-                        text: "二级类目1-1",
-                        nodes: [
-                            {text: "三级类目1-1-1"},
-                            {text: "三级类目1-1-2"}
-                        ]
-                    },
-                    {
-                        text: "二级类目1-2",
-                        nodes: [
-                            {text: "三级类目1-2-1"},
-                            {text: "三级类目1-2-2"}
-                        ]
-                    }
-                ]
             },
-            {
-                text: "一级类目2",
-                nodes: [
-                    {
-                        text: "二级类目2-1",
-                        nodes: [
-                            {text: "三级类目2-1-1"},
-                            {text: "三级类目2-1-2"}
-                        ]
-                    },
-                    {
-                        text: "二级类目2-2",
-                        nodes: [
-                            {text: "三级类目2-2-1"},
-                            {text: "三级类目2-2-2"}
-                        ]
+            generateCategoryList(data, level = 1) {
+                return data.map(item => {
+                    const node = {
+                        text: item.column_name,
+                        href: '#',
+                        selectable: false,
+                        state: {
+                            expanded: false
+                        },
+                        data: {
+                            columnId: item.column_id
+                        },
+                        class: `level-${level}`
+                    };
+
+                    if (item.children && item.children.length > 0) {
+                        node.nodes = this.generateCategoryList(item.children, level + 1);
+                    } else {
+                        node.href = 'javascript:void(0);';
+                        node.selectable = true;
                     }
-                ]
+                    return node;
+                });
             }
-        ];
+        }
+    };
 
-        $('#category-tree').treeview({
-            data: treeData,
-            multiSelect: false,
-            onNodeSelected: function (event, node) {
-                // 处理节点选择事件
-                console.log('Selected node:', node.text);
-            }
-        });
-
-        // 处理表单提交
-        $('#blog-form').on('submit', function (event) {
-            event.preventDefault();
-
-            const title = $('#blog-title').val();
-            const content = easyMDE.value();
-            const selectedNode = $('#category-tree').treeview('getSelected')[0];
-
-            if (!selectedNode) {
-                alert('请选择一个类目');
-                return;
-            }
-
-            const category = selectedNode.text;
-
-            // 发送保存请求
-            $.post('/save_blog', {
-                title: title,
-                content: content,
-                category: category
-            }, function (response) {
-                if (response.success) {
-                    alert('博客保存成功');
-                    // 重定向到博客列表页面或其他操作
-                } else {
-                    alert('博客保存失败');
+    // --- BlogFormComponent 组件 --- (Defined SECOND, after CategoryTreeComponent)
+    const BlogFormComponent = {
+        template: `
+          <div class="container mt-4">
+            <h2>新增/编辑博客</h2>
+            <form id="blog-form" @submit.prevent="handleSubmit">
+              <div class="mb-3">
+                <label for="blog-title" class="form-label">标题</label>
+                <input type="text" class="form-control" id="blog-title" v-model="blogForm.title" required>
+              </div>
+              <div class="mb-3">
+                <label for="blog-content" class="form-label">内容</label>
+                <textarea class="form-control" id="blog-content" rows="10" ref="markdownEditor"></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="category-tree" class="form-label">选择类目</label>
+                <category-tree-component @category-selected="onCategorySelected" ref="categoryTree"></category-tree-component>
+              </div>
+              <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+          </div>
+        `,
+        components: {
+            'category-tree-component': CategoryTreeComponent // Now CategoryTreeComponent is defined above
+        },
+        data() {
+            return {
+                blogForm: {
+                    title: '',
+                    content: '',
+                    category: null
+                },
+                easyMDE: null,
+            };
+        },
+        mounted() {
+            console.log("BlogFormComponent mounted"); // 调试信息
+            this.initializeEasyMDE();
+            this.loadBlogPost();
+        },
+        methods: {
+            initializeEasyMDE() {
+                const elementById = this.$refs.markdownEditor;
+                this.easyMDE = new EasyMDE({
+                    element: elementById,
+                    sideBySideFullscreen: false,
+                    renderingConfig: {
+                        codeSyntaxHighlighting: true,
+                        previewRender: (plainText) => {
+                            return marked(plainText);
+                        }
+                    }
+                });
+                console.log("EasyMDE initialized"); // 调试信息
+            },
+            loadBlogPost() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const blogId = urlParams.get('id');
+                if (blogId) {
+                    $.get(`${prefix_url}/get_one_blog/${blogId}`, (data) => {
+                        console.log("loadBlogPost API response:", data); // 调试信息
+                        if (data.message) {
+                            const {title, markdown} = data.message;
+                            this.blogForm.title = title;
+                            this.easyMDE.value(markdown);
+                            document.querySelectorAll('pre code').forEach(block => {
+                                hljs.highlightBlock(block);
+                            });
+                        }
+                    }).fail(error => {
+                        console.error("loadBlogPost API error:", error); // 调试信息
+                    });
                 }
-            });
-        });
-    })
-        ;
+            },
+            onCategorySelected(node) {
+                this.blogForm.category = node.text;
+                console.log("Category selected:", node.text); // 调试信息
+            },
+            handleSubmit() {
+                if (!this.blogForm.category) {
+                    alert('请选择一个类目');
+                    return;
+                }
+                this.blogForm.content = this.easyMDE.value();
+
+                $.post('/save_blog', this.blogForm, (response) => {
+                    console.log("handleSubmit API response:", response); // 调试信息
+                    if (response.success) {
+                        alert('博客保存成功');
+                        // Optionally redirect or clear form
+                    } else {
+                        alert('博客保存失败');
+                    }
+                }).fail(error => {
+                    console.error("handleSubmit API error:", error); // 调试信息
+                });
+            }
+        }
+    };
+
+    // --- HeaderComponent 组件 --- (Defined THIRD)
+    const HeaderComponent = {
+        template: `
+          <header class="blog-header">
+            <div class="blog-title">{{ blogTitle }}</div>
+            <div class="tags">
+              <div class="tag" @click="$emit('go-to-home')">主页</div>
+              <div class="tag" @click="$emit('go-to-search')">搜索</div>
+              <div class="tag" id="theme-toggle" @click="$emit('toggle-theme')">{{ themeText }}</div>
+            </div>
+          </header>
+        `,
+        props: {
+            blogTitle: String,
+            themeText: String
+        },
+        emits: ['toggle-theme', 'go-to-home', 'go-to-search'],
+        setup(props, { emit }) { // 使用 Composition API setup 函数
+            console.log("HeaderComponent setup"); // 调试信息
+
+            return {
+                // props 已经可以直接在 template 中访问
+            };
+        },
+        mounted() {
+            console.log("HeaderComponent mounted"); // 调试信息
+        }
+    };
+
+
+    // ---  Vue 应用实例 --- (Defined LAST)
+    const app = Vue.createApp({
+        data() {
+            return {
+                theme: 'light',
+                themeText: 'light',
+                blogTitle: 'bander 博客',
+                lightTheme: lightTheme,
+                darkTheme: darkTheme
+            };
+        },
+        computed: {
+            currentThemeData() {
+                return this.theme === 'light' ? this.lightTheme : this.darkTheme;
+            },
+        },
+        watch: {
+            currentThemeData: {
+                handler(themeData) {
+                    this.applyTheme(themeData);
+                },
+                deep: true
+            }
+        },
+        mounted() {
+            console.log("Vue App mounted"); // 调试信息
+            this.initTheme();
+            this.headerScrollListener();
+        },
+        methods: {
+            // --- 主题模块 (Vue 版本) ---
+            initTheme() {
+                this.theme = this.getCookie('theme') || 'light';
+                this.themeText = this.theme;
+                this.applyTheme(this.currentThemeData);
+                console.log("Theme initialized:", this.theme); // 调试信息
+            },
+            applyTheme(themeData) {
+                document.body.style.backgroundColor = themeData.bodyBg;
+                document.body.style.color = themeData.bodyColor;
+
+                const root = document.documentElement;
+                root.style.setProperty('--body-bg', themeData.bodyBg);
+                root.style.setProperty('--body-color', themeData.bodyColor);
+                root.style.setProperty('--card-bg', themeData.cardBg);
+                root.style.setProperty('--card-shadow', themeData.cardShadow);
+                root.style.setProperty('--text-color', themeData.textColor);
+                root.style.setProperty('--toc-bg', themeData.tocBg);
+                root.style.setProperty('--toc-border', themeData.tocBorder);
+                root.style.setProperty('--toc-text-color', themeData.tocTextColor);
+                console.log("Theme applied:", this.theme); // 调试信息
+            },
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                this.themeText = this.theme;
+                this.setCookie('theme', this.theme, 365);
+                this.applyTheme(this.currentThemeData);
+                console.log("Theme toggled to:", this.theme); // 调试信息
+            },
+            getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            },
+            setCookie(name, value, days) {
+                let expires = "";
+                if (days) {
+                    let date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "") + expires + "; path=/";
+            },
+            goToHome() {
+                window.open('/static/index.html');
+                console.log("goToHome triggered"); // 调试信息
+            },
+            goToSearch() {
+                window.open('/static/search.html');
+                console.log("goToSearch triggered"); // 调试信息
+            },
+
+            // --- 监听 header 颜色变化 (保持不变) ---
+            headerScrollListener() {
+                window.addEventListener('scroll', () => {
+                    const blogTitle = document.querySelector('.blog-title');
+                    const tags = document.querySelector('.tags');
+                    if (window.scrollY > 50) {
+                        blogTitle.style.color = '#000';
+                        tags.style.color = '#000';
+                    } else {
+                        blogTitle.style.color = '#fff';
+                        tags.style.color = '#fff';
+                    }
+                });
+            }
+        },
+        components: {
+            HeaderComponent,
+            BlogFormComponent,
+            CategoryTreeComponent // Make sure all components are registered here
+        }
+    }).mount('#app');
 </script>
 </body>
 </html>

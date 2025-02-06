@@ -182,7 +182,7 @@ namespace fast::net
                 co_return;
 
             auto [ec] = co_await ssl_stream.async_shutdown(asio::as_tuple);
-            if (ec && ec != boost::asio::ssl::error::stream_truncated)
+            if (ec && ec !=boost::asio::ssl::error::stream_truncated)
                 throw boost::system::system_error{ec};
         }
         else
@@ -346,7 +346,7 @@ namespace fast::net
             }
             catch (std::exception& e)
             {
-                ws_res = server_error(std::move(ws_req), e.what());
+                ws_res = fast::net::server_error(std::move(ws_req), e.what());
             }
 
             if (ws_res.body().size() > 0)
@@ -505,7 +505,7 @@ template asio::awaitable<void> fast::net::Server::run_websocket_session<asio::ss
     beast::http::request<beast::http::string_body> req,
     beast::string_view doc_root,
     fast::net::Server &server);
-}
+
 
 template asio::awaitable<void> fast::net::Server::run_session<beast::tcp_stream>(
     beast::tcp_stream &stream,
@@ -518,5 +518,5 @@ template asio::awaitable<void> fast::net::Server::run_session<asio::ssl::stream<
     beast::flat_buffer &buffer,
     beast::string_view doc_root,
     fast::net::Server &server);
-
+}
 // namespace fast::net

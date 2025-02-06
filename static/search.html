@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>bander 博客</title>
+    <title>bander 博客 (Vue.js 首页)</title>
     <link href="/static/css/bootstrap_5_3.min.css" rel="stylesheet">
     <style>
+        /* 样式保持不变，直接从之前的 style.css 复制过来 (内容省略，与之前版本相同) */
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
 
         body {
@@ -173,251 +174,339 @@
         .search-results {
             margin-top: 20px;
         }
+        .no-results-message {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            color: #777;
+        }
+        .loading-progress {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
-<div id="particles-js"></div>
-<header class="blog-header">
-    <div class="blog-title">bander 博客</div>
-    <div class="tags">
-        <div class="tag">主页</div>
-        <div class="tag">搜索</div>
-        <div class="tag" id="theme-toggle">light</div>
+<div id="app">
+    <header-component
+            :blog-title="blogTitle"
+            :theme-text="themeText"
+            @toggle-theme="toggleTheme"
+    ></header-component>
+
+    <div class="header-background">
     </div>
-</header>
 
-<div class="header-background">
-
-</div>
-
-<div class="container main-content mt-4">
-    <div class="row justify-content-center content">
-        <div class="col-lg-9 post-container" id="post-container">
-            <div class="search-container">
-                <input type="text" id="search-box" class="search-box" placeholder="搜索..."/>
+    <div class="container main-content mt-4">
+        <div class="row justify-content-center content">
+            <div class="col-lg-9 post-container" id="post-container">
+                <search-component @search-posts="searchPosts"></search-component>
+                <div class="search-results" id="search-results">
+                    <div v-if="loadingPosts" class="progress loading-progress">  <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">加载中...</div>
+                    </div>
+                    <post-card-component
+                            v-for="post in posts"
+                            :key="post.article_id"
+                            :post="post"
+                    ></post-card-component>
+                    <p v-if="noSearchResults && !loadingPosts && !loadPostsError" class="no-results-message">
+                        抱歉，没有找到与您搜索关键词相关的文章。换个词试试看？
+                    </p>
+                    <p v-if="noMorePosts && !noSearchResults" class="text-center">没有更多文章了</p>
+                    <p v-if="loadPostsError" class="text-danger text-center">加载文章失败</p>
+                </div>
             </div>
-            <div class="search-results" id="search-results"></div>
         </div>
     </div>
-</div>
 
-<footer>&copy; 2025 bander 博客v2.0</footer>
+    <footer>&copy; 2025 bander 博客v2.0</footer>
+</div>
 
 <script src="/static/js/jquery-3.6.0.min.js"></script>
 <script src="/static/js/bootstrap.bundle_5_3.min.js"></script>
-
+<script src="/static/js/vue.global.prod.js"></script>
 <script>
-    var prefix_url = "";
+    const prefix_url = "";
 
-    function setCookie(name, value, days) {
-        let expires = "";
-        if (days) {
-            let date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/";
-    }
+    const {createApp, ref, reactive, computed, onMounted, watch} = Vue;
 
-    function getCookie(name) {
-        let nameEQ = name + "=";
-        let ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
-    }
+    // ---  主题数据 (保持不变) ---
+    const lightTheme = {
+        bodyBg: '#f4f5f7',
+        bodyColor: '#333',
+        cardBg: 'white',
+        cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        textColor: '#666',
+        sidebarBg: 'white',
+        sidebarLiColor: '#333',
+        sidebarLineColor: '#ddd',
+        treeviewBg: '#f4f5f7',
+        treeviewColor: '#333'
+    };
 
-    const themeModule = (function () {
-        const themeToggle = $('#theme-toggle');
-        let currentTheme = getCookie('theme') || 'light';
+    const darkTheme = {
+        bodyBg: '#121212',
+        bodyColor: '#eee',
+        cardBg: '#1e1e1e',
+        cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
+        textColor: '#aaa',
+        sidebarBg: '#1e1e1e',
+        sidebarLiColor: '#ddd',
+        sidebarLineColor: '#555',
+        treeviewBg: '#1e1e1e',
+        treeviewColor: '#ddd'
+    };
 
-        const lightTheme = {
-            bodyBg: '#f4f5f7',
-            bodyColor: '#333',
-            cardBg: 'white',
-            cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            textColor: '#666',
-            sidebarBg: 'white',
-            sidebarLiColor: '#333',
-            sidebarLineColor: '#ddd',
-            treeviewBg: '#f4f5f7',
-            treeviewColor: '#333'
-        };
-
-        const darkTheme = {
-            bodyBg: '#121212',
-            bodyColor: '#eee',
-            cardBg: '#1e1e1e',
-            cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
-            textColor: '#aaa',
-            sidebarBg: '#1e1e1e',
-            sidebarLiColor: '#ddd',
-            sidebarLineColor: '#555',
-            treeviewBg: '#1e1e1e',
-            treeviewColor: '#ddd'
-        };
-
-        function applyTheme(theme) {
-            const themeData = theme === 'dark' ? darkTheme : lightTheme;
-            $('body').css({'background-color': themeData.bodyBg, 'color': themeData.bodyColor});
-            $('.post-card').css({'background-color': themeData.cardBg, 'box-shadow': themeData.cardShadow});
-            $('.post-description').css('color', themeData.textColor);
-        }
-
-        function init() {
-            applyTheme(currentTheme);
-            themeToggle.click(function () {
-                currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-                applyTheme(currentTheme);
-                themeToggle.text(currentTheme);
-                setCookie('theme', currentTheme, 365);
-            });
-        }
-
-        return {init};
-    })();
-
-    const postModule = (function () {
-        const postContainer = $('#post-container');
-        let currentPage = 1;
-        let isLoading = false;
-        let allPostsLoaded = false;
-        let scrollListenerAdded = false;
-
-        async function _loadPosts(query, page = 1) {
-            if (isLoading) return;
-            isLoading = true;
-
-            let url = `${prefix_url}/blog_full_text/${page}/15`;
-
-            console.log("加载文章，第 " + page + " 页，URL: " + url);
-
-            try {
-                const response = await $.post(url, JSON.stringify({blog_full_text: query}), null, 'json');
-
-                if (page === 1) {
-                    // 只清空搜索结果，而不是整个容器
-                    $('#search-results').empty();
-                }
-
-                if (response && response.message && response.message.length > 0) {
-                    const newPosts = response.message.map(_generatePostCard).join('');
-                    $('#search-results').append(newPosts);
-                    currentPage = page + 1;
-
-                    //设置点击事件
-                    const postCards = document.querySelectorAll('.post-card');
-                    postCards.forEach(function (postCard) {
-                        postCard.addEventListener('click', function (event) {
-                            const articleId = event.currentTarget.getAttribute('data-article-id');
-                            window.open('/static/blog.html?id=' + articleId);
-                        });
-                    });
-
-                    _addScrollEvent();
-                } else {
-                    _removeScrollEvent();
-                    $('#search-results').append("<p>没有更多文章了</p>");
-                    allPostsLoaded = true;
-                }
-
-            } catch (error) {
-                console.error("加载文章失败:", error);
-                if (page === 1) {
-                    $('#search-results').html("<p>加载文章失败</p>");
-                }
-            } finally {
-                isLoading = false;
-                themeModule.init();
+    // --- HeaderComponent 组件 (保持不变) ---
+    const HeaderComponent = {
+        template: `
+          <header class="blog-header">
+            <div class="blog-title">{{ blogTitle }}</div>
+            <div class="tags">
+              <div class="tag" @click="goToHome">主页</div>
+              <div class="tag" @click="goToSearch">搜索</div>
+              <div class="tag" id="theme-toggle" @click="toggleTheme">{{ themeText }}</div>
+            </div>
+          </header>
+        `,
+        props: {
+            blogTitle: String,
+            themeText: String
+        },
+        emits: ['toggle-theme'],
+        methods: {
+            toggleTheme() {
+                this.$emit('toggle-theme');
+            },
+            goToHome() {
+                window.open('/static/index.html');
+            },
+            goToSearch() {
+                window.open('/static/search.html');
             }
         }
+    };
 
-
-        function _generatePostCard(postData) {
-            const title = postData && postData.title ? postData.title : "无标题";
-            const content = postData && postData.content_preview ? postData.content_preview.substring(0, 100) + "..." : "无内容";
-
-            return `
-            <div class="post-card" data-aos="fade-up" data-article-id="${postData.article_id}">
-                <h2 class="post-title">${title}</h2>
-                <p class="post-description">${content}</p>
-            </div>
-        `;
+    // --- PostCardComponent 组件 ---
+    const PostCardComponent = {
+        template: `
+          <div class="post-card" data-aos="fade-up" @click="goToBlog(post.article_id)">
+            <h2 class="post-title">{{ post.title }}</h2>
+            <p class="post-description">{{ post.content_preview.substring(0, 100) + "..." }}</p>
+          </div>
+        `,
+        props: {
+            post: Object
+        },
+        methods: {
+            goToBlog(articleId) {
+                window.open('/static/blog.html?id=' + articleId);
+            }
         }
+    };
 
-        function _addScrollEvent() {
-            if (scrollListenerAdded) return;
-            $(window).scroll(function () {
-                if ($(window).scrollTop() + $(window).height() > $(document).height() - 200 && !isLoading && !allPostsLoaded) {
-                    _loadPosts($('#search-box').val(), currentPage);
+    // --- SearchComponent 组件 ---
+    const SearchComponent = {
+        template: `
+          <div class="search-container">
+            <input type="text" id="search-box" class="search-box" placeholder="搜索..." @keypress.enter="handleSearch"
+                   ref="searchInput"/>
+          </div>
+        `,
+        emits: ['search-posts'],
+        methods: {
+            handleSearch() {
+                this.$emit('search-posts', this.$refs.searchInput.value);
+            }
+        }
+    };
+
+
+    // ---  Vue 应用实例 ---
+    const app = Vue.createApp({
+        data() {
+            return {
+                theme: 'light',
+                themeText: 'light',
+                blogTitle: 'bander 博客',
+                posts: [],
+                currentPage: 1,
+                isLoading: false,
+                allPostsLoaded: false,
+                loadPostsError: false,
+                searchQuery: '',
+                lightTheme: lightTheme,
+                darkTheme: darkTheme,
+                noSearchResults: false // ADDED: Flag to indicate no search results
+            };
+        },
+        computed: {
+            currentThemeData() {
+                return this.theme === 'light' ? this.lightTheme : this.darkTheme;
+            },
+            noMorePosts() {
+                return this.allPostsLoaded && this.posts.length > 0 && !this.noSearchResults; // Modified
+            },
+            loadingPosts() {
+                return this.isLoading;
+            }
+        },
+        watch: {
+            currentThemeData: {
+                handler(themeData) {
+                    this.applyTheme(themeData);
+                },
+                deep: true
+            }
+        },
+        mounted() {
+            this.initTheme();
+            this.loadPosts();
+            this.headerScrollListener();
+            this.infiniteScrollListener();
+        },
+        methods: {
+            // --- 主题模块 (保持不变，Vue 版本) ---
+            initTheme() {
+                this.theme = this.getCookie('theme') || 'light';
+                this.themeText = this.theme;
+                this.applyTheme(this.currentThemeData);
+            },
+            applyTheme(themeData) {
+                document.body.style.backgroundColor = themeData.bodyBg;
+                document.body.style.color = themeData.bodyColor;
+
+                const root = document.documentElement;
+                root.style.setProperty('--body-bg', themeData.bodyBg);
+                root.style.setProperty('--body-color', themeData.bodyColor);
+                root.style.setProperty('--card-bg', themeData.cardBg);
+                root.style.setProperty('--card-shadow', themeData.cardShadow);
+                root.style.setProperty('--text-color', themeData.textColor);
+                root.style.setProperty('--sidebar-bg', themeData.sidebarBg);
+                root.style.setProperty('--sidebar-li-color', themeData.sidebarLiColor);
+                root.style.setProperty('--sidebar-line-color', themeData.sidebarLineColor);
+                root.style.setProperty('--treeview-bg', themeData.treeviewBg);
+                root.style.setProperty('--treeview-color', themeData.treeviewColor);
+            },
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                this.themeText = this.theme;
+                this.setCookie('theme', this.theme, 365);
+                this.applyTheme(this.currentThemeData);
+            },
+            getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
                 }
-            });
-            scrollListenerAdded = true;
-        }
+                return null;
+            },
+            setCookie(name, value, days) {
+                let expires = "";
+                if (days) {
+                    let date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "") + expires + "; path=/";
+            },
 
-        function _removeScrollEvent() {
-            $(window).off('scroll');
-            scrollListenerAdded = false;
-        }
+            // ---  Tag 模块 (Vue 版本，集成到 HeaderComponent) ---
+            goToHome() {
+                window.open('/static/index.html');
+            },
+            goToSearch() {
+                window.open('/static/search.html');
+                console.log("去搜索页面")
+            },
 
-        function init() {
-            $('#search-box').on('keypress', function (e) {
-                if (e.which === 13) {
-                    const query = $(this).val();
-                    if (query) {
-                        _loadPosts(query, 1);
-                        /*$('html, body').animate({ scrollTop: 0 }, 'fast');*/
+            // --- 博客文章模块 (Vue 版本) ---
+            async loadPosts(page = 1) {
+                if (this.isLoading || this.allPostsLoaded) return;
+                this.isLoading = true;
+                this.loadPostsError = false;
+                this.noSearchResults = false; // ADDED: Reset noSearchResults flag at the start of each load
+
+                if (this.searchQuery === '') {
+                    this.isLoading = false;
+                    return;
+                }
+
+                let url = `${prefix_url}/blog_full_text/${page}/15`;
+                console.log("加载文章，第 " + page + " 页，URL: " + url);
+
+                try {
+                    const response = await $.post(url, JSON.stringify({blog_full_text: this.searchQuery}), null, 'json');
+                    if (response.message.length === 0) {
+                        this.allPostsLoaded = true;
+                        this.posts = [];
+                        this.noSearchResults = true; // ADDED: Set noSearchResults flag if no results
+                    } else if (response && response.message) {
+                        if (page === 1) {
+                            this.posts = response.message;
+                        } else {
+                            this.posts = this.posts.concat(response.message);
+                        }
+                        this.currentPage = page + 1;
+                        if (response.message.length < 15) { // Assuming 15 is the page size
+                            this.allPostsLoaded = true;
+                        }
+                        this.noSearchResults = false; // ADDED: Ensure noSearchResults is false when results are found
+                    } else {
+                        this.allPostsLoaded = true;
+                        if (page === 1) {
+                            this.posts = []; // No posts on first page, clear existing
+                        }
+                        this.noSearchResults = true; // ADDED: Set noSearchResults flag as fallback if response is unexpected
                     }
+                } catch (error) {
+                    console.error("加载文章失败:", error);
+                    this.loadPostsError = true;
+                    this.noSearchResults = false; // ADDED: Ensure noSearchResults is false in case of error
+                } finally {
+                    this.isLoading = false;
                 }
-            });
-        }
-
-        return {init};
-    })();
-
-    const tagModule = (function () {
-        const tags = document.querySelectorAll('header .tag');
-
-        function bindTagEvents() {
-            tags.forEach(tag => {
-                tag.addEventListener('click', function () {
-                    console.log('Clicked tag:', this.textContent);
-                    if (this.textContent === "搜索") {
-                        window.open('/static/search.html');
-                    } else if (this.textContent === "主页") {
-                        window.open('/static/index.html');
-                    } else if (this.textContent === "dark" || this.textContent === "light") {
-                        themeModule.init();
+            },
+            searchPosts(query) {
+                this.searchQuery = query;
+                this.currentPage = 1;
+                this.allPostsLoaded = false;
+                this.noSearchResults = false; // ADDED: Reset noSearchResults when a new search starts
+                this.posts = []; // Clear existing posts before new search
+                this.loadPosts(1);
+            },
+            infiniteScrollListener() {
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY + window.innerHeight > document.documentElement.scrollHeight - 200 && !this.isLoading && !this.allPostsLoaded) {
+                        this.loadPosts(this.currentPage);
                     }
                 });
-            });
-        }
-
-        function init() {
-            bindTagEvents();
-        }
-
-        return {init}
-    })();
-
-    $(document).ready(function () {
-        tagModule.init();
-        postModule.init();
-        themeModule.init();
+            },
 
 
-        // 监听滚动事件
-        $(window).scroll(function () {
-            if ($(window).scrollTop() > 50) {
-                $('.blog-title, .tags').css('color', '#000');
-            } else {
-                $('.blog-title, .tags').css('color', '#fff');
+            // --- 监听 header 颜色变化 (保持不变) ---
+            headerScrollListener() {
+                window.addEventListener('scroll', () => {
+                    const blogTitle = document.querySelector('.blog-title');
+                    const tags = document.querySelector('.tags');
+                    if (window.scrollY > 50) {
+                        blogTitle.style.color = '#000';
+                        tags.style.color = '#000';
+                    } else {
+                        blogTitle.style.color = '#fff';
+                        tags.style.color = '#fff';
+                    }
+                });
             }
-        });
-    });
+        },
+        components: {
+            HeaderComponent,
+            PostCardComponent,
+            SearchComponent
+        }
+    }).mount('#app');
 </script>
 </body>
 </html>

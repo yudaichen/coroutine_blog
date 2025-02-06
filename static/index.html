@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>bander 博客</title>
+    <title>bander 博客 (Vue.js 风格 - 优化版)</title>
     <link href="/static/css/bootstrap_5_3.min.css" rel="stylesheet">
-    <link href="/static/css/bootstrap-treeview_1_2_0.min.css"
-          rel="stylesheet">
+    <link href="/static/css/bootstrap-treeview_1_2_0.min.css" rel="stylesheet">
     <style>
+        /* 样式保持不变，直接从之前的 style.css 复制过来 (内容省略，与之前版本相同) */
         @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
 
         body {
@@ -15,7 +15,7 @@
             color: #333;
             font-family: 'Comic Neue', cursive;
             margin: 0;
-            font-size: 18px; /* 调整字体大小 */
+            font-size: 18px;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
@@ -36,10 +36,10 @@
         }
 
         .header-background {
-            background-image: url('/static/back.gif'); /* 替换为您的背景图片路径 */
+            background-image: url('/static/back.gif');
             background-size: cover;
             background-position: center;
-            height: 90vh; /* 占据屏幕五分之三的高度 */
+            height: 90vh;
             position: relative;
         }
 
@@ -49,7 +49,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            background: rgba(0, 0, 0, 0.5); /* 透明黑色背景框 */
+            background: rgba(0, 0, 0, 0.5);
             padding: 20px;
             border-radius: 10px;
         }
@@ -150,7 +150,9 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+            margin-top: 1rem;
             animation: gradientAnimation 10s ease infinite;
+
         }
 
         @keyframes gradientAnimation {
@@ -180,28 +182,28 @@
         }
 
         .treeview .list-group-item {
-            font-size: 1.1rem; /* 调整字体大小 */
+            font-size: 1.1rem;
             font-weight: bold;
             border: none;
         }
 
         .treeview .list-group-item.level-1 {
-            font-size: 1.3rem; /* 调整字体大小 */
+            font-size: 1.3rem;
         }
 
         .treeview .list-group-item.level-2 {
-            font-size: 1.2rem; /* 调整字体大小 */
+            font-size: 1.2rem;
         }
 
         .treeview .list-group-item.level-3 {
-            font-size: 1.1rem; /* 调整字体大小 */
+            font-size: 1.1rem;
         }
 
         .treeview .list-group-item.node-treeview.node-selected {
             background: linear-gradient(270deg, #ffcccc, #e6ccff, #ccffff) !important;
             background-size: 600% 600%;
             border-color: #ffcccc;
-            color: #333 !important; /* 设置字体颜色 */
+            color: #333 !important;
         }
 
         .main-content {
@@ -245,390 +247,446 @@
     </style>
 </head>
 <body>
-<div id="particles-js"></div>
-<header class="blog-header">
-    <div class="blog-title">bander 博客</div>
-    <div class="tags">
-        <div class="tag">主页</div>
-        <div class="tag">搜索</div>
-        <div class="tag" id="theme-toggle">light</div>
+<div id="app">
+    <header-component
+            :blog-title="blogTitle"
+            :theme-text="themeText"
+            @toggle-theme="toggleTheme"
+    ></header-component>
+
+    <div class="header-background">
+        <div class="header-content">
+            <h1 id="animated-text">{{ animatedHeaderText }}</h1>
+        </div>
     </div>
-</header>
 
-<div class="header-background">
-    <div class="header-content">
-        <h1 id="animated-text">春风若有怜花意，可否许我再少年?</h1>
-    </div>
-</div>
-
-<div class="container main-content mt-4">
-    <div class="row justify-content-center content">
-        <div class="col-lg-3">
-            <div class="sidebar">
-                <h3>网站统计数据</h3>
-                <div><p>mysql大小:&nbsp;&nbsp; 27 &nbsp;&nbsp;MB </p></div>
-                <div><p>上线时间:&nbsp;&nbsp; 2022 &nbsp;年 </p></div>
-                <div><p>总博客量:&nbsp;&nbsp; 305 &nbsp;&nbsp;条 </p></div>
-
+    <div class="container main-content mt-4">
+        <div class="row justify-content-center content">
+            <div class="col-lg-3">
+                <sidebar-component
+                        :statistics="statistics"
+                        :categories="categories"
+                        :theme-data="currentThemeData"  @category-selected="loadPostsByCategory" ></sidebar-component>
             </div>
-            <div class="tree-container">
-                <div id="treeview"></div>
+            <div class="col-lg-9 post-container" id="post-container">
+                <post-list-component
+                        :posts="posts"
+                        :is-loading-posts="isLoadingPosts"
+                        :all-posts-loaded="allPostsLoaded"
+                        @load-more-posts="loadMorePosts"
+                ></post-list-component>
             </div>
         </div>
-        <div class="col-lg-9 post-container" id="post-container"></div>
     </div>
-</div>
 
-<footer>&copy; 2025 bander 博客v2.0</footer>
+    <footer>&copy; 2025 bander 博客v2.0</footer>
+</div>
 
 <script src="/static/js/jquery-3.6.0.min.js"></script>
 <script src="/static/js/bootstrap.bundle_5_3.min.js"></script>
 <script src="/static/js/bootstrap-treeview_1_2.min.js"></script>
+<script src="/static/js/vue.global.prod.js"></script>
 <script>
-    var prefix_url = "";
+    const prefix_url = ""; // 请根据实际情况设置 API 前缀
 
-    function setCookie(name, value, days) {
-        let expires = "";
-        if (days) {
-            let date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            expires = "; expires=" + date.toUTCString();
-        }
-        document.cookie = name + "=" + (value || "") + expires + "; path=/";
-    }
+    const { createApp, ref, reactive, computed, onMounted, watch } = Vue;
 
-    function getCookie(name) {
-        let nameEQ = name + "=";
-        let ca = document.cookie.split(';');
-        for (let i = 0; i < ca.length; i++) {
-            let c = ca[i];
-            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-        }
-        return null;
-    }
+    // ---  主题数据 (保持不变) ---
+    const lightTheme = {
+        bodyBg: '#f4f5f7',
+        bodyColor: '#333',
+        cardBg: 'white',
+        cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        textColor: '#666',
+        sidebarBg: 'white',
+        sidebarLiColor: '#333',
+        sidebarLineColor: '#ddd',
+        treeviewBg: '#f4f5f7',
+        treeviewColor: '#333',
+    };
 
-    const themeModule = (function () {
-        const theme_toggle_class = $('#theme-toggle');
+    const darkTheme = {
+        bodyBg: '#121212',
+        bodyColor: '#eee',
+        cardBg: '#1e1e1e',
+        cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
+        textColor: '#aaa',
+        sidebarBg: '#1e1e1e',
+        sidebarLiColor: '#ddd',
+        sidebarLineColor: '#555',
+        treeviewBg: '#1e1e1e',
+        treeviewColor: '#ddd',
+    };
 
-        const lightTheme = {
-            bodyBg: '#f4f5f7',
-            bodyColor: '#333',
-            cardBg: 'white',
-            cardShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-            textColor: '#666',
-            sidebarBg: 'white',
-            sidebarLiColor: '#333',
-            sidebarLineColor: '#ddd',
-            treeviewBg: '#f4f5f7',
-            treeviewColor: '#333'
-        };
 
-        const darkTheme = {
-            bodyBg: '#121212',
-            bodyColor: '#eee',
-            cardBg: '#1e1e1e',
-            cardShadow: '0 2px 4px rgba(255, 255, 255, 0.1)',
-            textColor: '#aaa',
-            sidebarBg: '#1e1e1e',
-            sidebarLiColor: '#ddd',
-            sidebarLineColor: '#555',
-            treeviewBg: '#1e1e1e',
-            treeviewColor: '#ddd'
-        };
-
-        function applyTheme(theme) {
-            const themeData = theme === 'dark' ? darkTheme : lightTheme;
-            $('body').css({'background-color': themeData.bodyBg, 'color': themeData.bodyColor});
-            $('.post-card').css({'background-color': themeData.cardBg, 'box-shadow': themeData.cardShadow});
-            $('.post-description').css('color', themeData.textColor);
-            $('.sidebar').css('background-color', themeData.sidebarBg);
-            $('.sidebar').css('color', themeData.sidebarBg);
-
-            $('.sidebar li').css('color', themeData.sidebarLiColor);
-            $('.sidebar li:not(:last-child)::after').css('background-color', themeData.sidebarLineColor);
-
-            $('.tree-container').css('background-color', themeData.treeviewBg);
-            $('.tree-container ul li').css('color', themeData.treeviewColor);
-
-            $('.treeview').css('background-color', themeData.treeviewBg);
-            $('.treeview ').css('color', themeData.treeviewColor);
-
-            $('.list-group-item').css('background-color', themeData.treeviewBg);
-            $('.list-group-item').css('color', themeData.treeviewColor);
-        }
-
-        function init() {
-            const theme = getCurrentTheme();
-            applyTheme(theme);
-            setText(theme);
-        }
-
-        function getThemeType() {
-            if (getCurrentTheme() === 'light') {
-                return lightTheme;
-            } else {
-                return darkTheme;
-            }
-        }
-
-        function setText(theme) {
-            theme_toggle_class.text(theme);
-        }
-
-        function getCurrentTheme() {
-            return getCookie('theme') || 'light';
-        }
-
-        return {init, getThemeType, applyTheme, getCurrentTheme, setText};
-    })();
-
-    const categoryModule = (function () {
-        function generateCategoryList(data, level = 1) {
-            return data.map(item => {
-                const node = {
-                    text: item.column_name,
-                    href: '#',
-                    selectable: false,
-                    state: {
-                        expanded: false
-                    },
-                    data: {
-                        columnId: item.column_id
-                    },
-                    class: `level-${level}`
-                };
-
-                if (item.children && item.children.length > 0) {
-                    node.nodes = generateCategoryList(item.children, level + 1);
-                } else {
-                    node.href = 'javascript:void(0);';
-                    node.selectable = true;
-                }
-
-                return node;
-            });
-        }
-
-        function init() {
-            $.get(prefix_url + '/get_blog_columns')
-                .done(function (data) {
-                    if (data.message && data.message.length > 0) {
-                        const treeData = generateCategoryList(data.message);
-                        const themeData = themeModule.getThemeType();
-
-                        $('#treeview').treeview({
-                            data: treeData,
-                            backColor: themeData.treeviewBg,
-                            color: themeData.treeviewColor,
-                            onhoverColor: themeData.treeviewBg,
-                            levels: 1,
-                            expandIcon: 'bi bi-chevron-right',
-                            collapseIcon: 'bi bi-chevron-down',
-                            nodeIcon: 'bi bi-folder',
-                            selectedIcon: 'bi bi-check',
-                            showTags: true,
-                            onNodeSelected: function (event, node) {
-                                themeModule.init();
-                                if (node.href === 'javascript:void(0);') {
-                                    console.log('onNodeSelected 点击了' + node.data.columnId);
-                                    const postContainer = $('#post-container');
-                                    postContainer.empty();
-
-                                    postModule._removeScrollEvent();
-                                    postModule.loadPostsByCategory(node.data.columnId);
-                                    postModule._addScrollEvent();
-                                } else if (node.nodes) {
-                                    $('#treeview').treeview('expandNode', [node.nodeId, {levels: 2, silent: true}]);
-                                }
-                            }
-                        });
-                    } else {
-                        console.warn("API 返回数据为空数组:", data);
-                        $('#treeview').text("暂无数据");
-                    }
-                }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.error("API 请求错误:", textStatus, errorThrown);
-                $('#treeview').text("加载数据失败: " + textStatus);
-                if (jqXHR.status === 404) {
-                    $('#treeview').text("未找到数据");
-                } else if (jqXHR.status === 500) {
-                    $('#treeview').text("服务器内部错误");
-                }
-            });
-        }
-
-        return {init};
-    })();
-
-    const postModule = (function () {
-        const postContainer = $('#post-container');
-        let currentPage = 1;
-        let isLoading = false;
-        let allPostsLoaded = false;
-        let currentCategoryId = null;
-        let scrollListenerAdded = false;
-
-        async function _loadPosts(categoryId, page = 1) {
-            if (isLoading) return;
-            isLoading = true;
-
-            let getCategoryId;
-
-            if (categoryId === null || categoryId === void 0) {
-                getCategoryId = 0;
-            } else {
-                getCategoryId = categoryId;
-            }
-
-            let url = prefix_url + '/get_all_blog/' + getCategoryId + '/' + page + '/15';
-
-            console.log("加载文章，第 " + page + " 页，URL: " + url);
-
-            try {
-                const response = await $.get(url);
-                if (page === 0 && response.code !== 200) {
-                    postContainer.empty();
-                }
-
-                if (response && response.message && response.message.length > 0) {
-                    const newPosts = response.message.map(_generatePostCard).join('');
-                    postContainer.append(newPosts);
-                    currentPage = page + 1;
-
-                    //设置点击事件
-                    const postCards = document.querySelectorAll('.post-card');
-                    postCards.forEach(function (postCard) {
-                        // 为每个.post-card元素添加点击事件监听器
-                        postCard.addEventListener('click', function (event) {
-                            // 从事件目标（即被点击的.post-card元素）的data-article-id属性中获取文章ID
-                            const articleId = event.currentTarget.getAttribute('data-article-id');
-                            // 使用获取到的文章ID动态设置URL
-                            window.open('/static/blog.html?id=' + articleId);
-                        });
-                    });
-
-                } else {
-                    _removeScrollEvent();
-                    postContainer.append("<p>没有更多文章了</p>");
-                    allPostsLoaded = true;
-                }
-            } catch (error) {
-                console.error("加载文章失败:", error);
-                if (page === 1) {
-                    postContainer.html("<p>加载文章失败</p>");
-                }
-            } finally {
-                isLoading = false;
-                themeModule.init();
-            }
-        }
-
-        function loadPostsByCategory(categoryId) {
-            currentCategoryId = categoryId;
-            currentPage = 1;
-            allPostsLoaded = false;
-            _loadPosts(categoryId);
-            _addScrollEvent();
-        }
-
-        function loadMorePosts() {
-            if (allPostsLoaded || isLoading) return;
-            _loadPosts(currentCategoryId, currentPage);
-        }
-
-        function _generatePostCard(postData) {
-            const title = postData && postData.title ? postData.title : "无标题";
-            const content = postData && postData.content_preview ? postData.content_preview.substring(0, 100) + "..." : "无内容";
-
-            return `
-            <div class="post-card" data-aos="fade-up" data-article-id="${postData.article_id}">
-                <h2 class="post-title">${title}</h2>
-                <p class="post-description">${content}</p>
+    // ---  HeaderComponent 组件 (修正 props 和事件) ---
+    const HeaderComponent = {
+        template: `
+          <header class="blog-header">
+            <div class="blog-title">{{ blogTitle }}</div>
+            <div class="tags">
+              <div class="tag" @click="goToHome">主页</div>
+              <div class="tag" @click="goToSearch">搜索</div>
+              <div class="tag" id="theme-toggle" @click="toggleTheme">{{ themeText }}</div>
             </div>
-        `;
+          </header>
+        `,
+        props: {
+            blogTitle: String,
+            themeText: String
+        },
+        emits: ['toggle-theme'],
+        methods: {
+            toggleTheme() {
+                this.$emit('toggle-theme');
+            },
+            goToHome() {
+                window.open('/static/index.html');
+            },
+            goToSearch() {
+                window.open('/static/search.html');
+            }
         }
+    };
 
-        function _addScrollEvent() {
-            if (scrollListenerAdded) return;
-            $(window).scroll(function () {
-                if ($(window).scrollTop() + $(window).height() > $(document).height() - 200 && !isLoading && !allPostsLoaded) {
-                    loadMorePosts();
-                }
-            });
-            scrollListenerAdded = true;
-        }
+    // ---  SidebarComponent 组件 (修正 props 和 Treeview 渲染) ---
+    const SidebarComponent = {
+        template: `
+          <div class="sidebar">
+            <h3>网站统计数据</h3>
+            <div><p>mysql大小:&nbsp;&nbsp; {{ statistics.mysqlSize }} &nbsp;&nbsp;MB </p></div>
+            <div><p>上线时间:&nbsp;&nbsp; {{ statistics.onlineTime }} &nbsp;年 </p></div>
+            <div><p>总博客量:&nbsp;&nbsp; {{ statistics.totalBlogs }} &nbsp;&nbsp;条 </p></div>
+          </div>
+          <div class="tree-container">
+            <div id="treeview"></div>
+          </div>
+        `,
+        props: {
+            statistics: Object,
+            categories: Array,
+            themeData: Object // 接收主题数据
+        },
+        emits: ['category-selected'], // 声明分类选择事件
+        mounted() {
+            this.renderTreeView();
+        },
+        watch: {
+            categories: 'renderTreeView',
+            themeData: 'renderTreeView' // 监听主题数据变化，重新渲染 TreeView
+        },
+        methods: {
+            renderTreeView() {
+                const themeData = this.themeData; // 使用 props 传递的主题数据
+                const treeviewElement = $('#treeview'); // 使用局部变量缓存 jQuery 对象
 
-        function _removeScrollEvent() {
-            $(window).off('scroll');
-            scrollListenerAdded = false;
-        }
-
-        function init() {
-            _loadPosts();
-            _addScrollEvent();
-        }
-
-        return {init, loadPostsByCategory, _generatePostCard, _addScrollEvent, _removeScrollEvent};
-    })();
-
-    const tagModule = (function () {
-        const tags = document.querySelectorAll('header .tag');
-
-        function bindTagEvents() {
-            tags.forEach(tag => {
-                tag.addEventListener('click', function () {
-                    console.log('Clicked tag:', this.textContent);
-                    if (this.textContent === "搜索") {
-                        window.open('/static/search.html');
-                    } else if (this.textContent === "主页") {
-                        window.open('/static/index.html');
-                    } else if (this.textContent === "dark" || this.textContent === "light") {
-                        let currentTheme = this.textContent === 'light' ? 'dark' : 'light';
-                        setCookie('theme', currentTheme, 365);
-                        themeModule.applyTheme(currentTheme);
-                        themeModule.setText(currentTheme);
+                treeviewElement.treeview({
+                    data: this.categories,
+                    backColor: themeData.treeviewBg,
+                    color: themeData.treeviewColor,
+                    onhoverColor: themeData.treeviewBg,
+                    levels: 1,
+                    expandIcon: 'bi bi-chevron-right',
+                    collapseIcon: 'bi bi-chevron-down',
+                    nodeIcon: 'bi bi-folder',
+                    selectedIcon: 'bi bi-check',
+                    showTags: true,
+                    onNodeSelected: (event, node) => {
+                        this.$parent.applyTheme(themeData); // 应用主题 (仍然访问父组件方法)
+                        if (node.href === 'javascript:void(0);') {
+                            console.log('onNodeSelected 点击了分类: ' + node.data.columnId);
+                            this.$emit('category-selected', node.data.columnId); // 触发分类选择事件
+                        } else if (node.nodes) {
+                            treeviewElement.treeview('expandNode', [node.nodeId, { levels: 2, silent: true }]);
+                        }
                     }
                 });
-            });
+            },
         }
+    };
 
-        function init() {
-            bindTagEvents();
 
-        }
-
-        return {init}
-    })();
-
-    $(document).ready(function () {
-        categoryModule.init();
-        postModule.init();
-        tagModule.init();
-        themeModule.init();
-        // 监听滚动事件
-        $(window).scroll(function () {
-            if ($(window).scrollTop() > 50) {
-                $('.blog-title, .tags').css('color', '#000');
-            } else {
-                $('.blog-title, .tags').css('color', '#fff');
+    // ---  PostListComponent 组件 (修正 props 和文章列表渲染) ---
+    const PostListComponent = {
+        template: `
+          <div class="row justify-content-center">
+            <div v-for="post in posts" :key="post.article_id" class="col-lg-4 col-md-6 col-sm-12 mb-4">
+              <div class="card post-card" data-aos="fade-up" :data-article-id="post.article_id" @click="openPost(post.article_id)">
+                <div class="card-body">
+                  <h5 class="card-title post-title">{{ post.title }}</h5>
+                  <p class="card-text post-description">{{ post.content_preview.substring(0, 100) + '...' }}</p>
+                </div>
+              </div>
+            </div>
+            <p v-if="allPostsLoaded && posts.length > 0">没有更多文章了</p>
+            <p v-if="allPostsLoaded && posts.length === 0">暂无文章</p>
+            <p v-if="isLoadingPosts">加载中...</p>
+            <p v-if="posts.length === 0 && !isLoadingPosts && !allPostsLoaded">加载文章失败</p>
+          </div>
+        `,
+        props: {
+            posts: Array, // 明确声明 posts prop 是 Array 类型
+            isLoadingPosts: Boolean,
+            allPostsLoaded: Boolean
+        },
+        emits: ['load-more-posts'], // 声明加载更多文章事件
+        mounted() {
+            //  添加滚动监听器，触发父组件的 loadMorePosts 方法
+            window.addEventListener('scroll', this.scrollHandler);
+        },
+        beforeUnmount() {
+            //  组件卸载前移除滚动监听器，避免内存泄漏
+            window.removeEventListener('scroll', this.scrollHandler);
+        },
+        methods: {
+            openPost(articleId) {
+                window.open('/static/blog.html?id=' + articleId);
+            },
+            scrollHandler() {
+                if (window.scrollY + window.innerHeight > document.documentElement.scrollHeight - 200 && !this.isLoadingPosts && !this.allPostsLoaded) {
+                    this.loadMore(); // 触发加载更多事件
+                }
+            },
+            loadMore() {
+                this.$emit('load-more-posts'); // 触发加载更多文章事件
             }
-        });
+        }
+    };
 
-        // 文字逐个出现动画
-        const text = $('#animated-text').text();
-        const textArray = text.split('');
-        $('#animated-text').html('');
-        textArray.forEach((char, index) => {
-            $('#animated-text').append(`<span style="animation-delay: ${index * 0.2}s">${char}</span>`);
-        });
 
-        // 文字动画循环
-        setInterval(() => {
-            $('#animated-text').html('');
-            textArray.forEach((char, index) => {
-                $('#animated-text').append(`<span style="animation-delay: ${index * 0.2}s">${char}</span>`);
-            });
-        }, (textArray.length * 100) + 3000); // 文字出现完后停顿1秒
-    });
+    // ---  Vue 应用实例 ---
+    const app = Vue.createApp({
+        data() {
+            return {
+                theme: 'light',
+                themeText: 'light',
+                blogTitle: 'bander 博客',
+                animatedHeaderText: '春风若有怜花意，可否许我再少年?',
+                categories: [],
+                posts: [],
+                currentCategoryId: 0,
+                currentPage: 1,
+                isLoadingPosts: false,
+                allPostsLoaded: false,
+                statistics: {
+                    mysqlSize: '27',
+                    onlineTime: '2022',
+                    totalBlogs: '305'
+                },
+                lightTheme: lightTheme,
+                darkTheme: darkTheme
+            };
+        },
+        computed: {
+            currentThemeData() {
+                return this.theme === 'light' ? this.lightTheme : this.darkTheme;
+            }
+        },
+        watch: {
+            currentThemeData: {
+                handler(themeData) {
+                    this.applyTheme(themeData);
+                },
+                deep: true
+            }
+        },
+        mounted() {
+            this.initTheme();
+            this.initCategories();
+            this.initPosts();
+            this.animateHeaderText();
+            this.headerScrollListener();
+        },
+        methods: {
+            // --- 主题模块 (保持不变) ---
+            initTheme() {
+                this.theme = this.getCookie('theme') || 'light';
+                this.themeText = this.theme;
+                this.applyTheme(this.currentThemeData);
+            },
+            applyTheme(themeData) {
+                document.body.style.backgroundColor = themeData.bodyBg;
+                document.body.style.color = themeData.bodyColor;
+
+                const root = document.documentElement;
+                root.style.setProperty('--body-bg', themeData.bodyBg);
+                root.style.setProperty('--body-color', themeData.bodyColor);
+                root.style.setProperty('--card-bg', themeData.cardBg);
+                root.style.setProperty('--card-shadow', themeData.cardShadow);
+                root.style.setProperty('--text-color', themeData.textColor);
+                root.style.setProperty('--sidebar-bg', themeData.sidebarBg);
+                root.style.setProperty('--sidebar-li-color', themeData.sidebarLiColor);
+                root.style.setProperty('--sidebar-line-color', themeData.sidebarLineColor);
+                root.style.setProperty('--treeview-bg', themeData.treeviewBg);
+                root.style.setProperty('--treeview-color', themeData.treeviewColor);
+            },
+            toggleTheme() {
+                this.theme = this.theme === 'light' ? 'dark' : 'light';
+                this.themeText = this.theme;
+                this.setCookie('theme', this.theme, 365);
+                this.applyTheme(this.currentThemeData);
+            },
+            getCookie(name) {
+                const nameEQ = name + "=";
+                const ca = document.cookie.split(';');
+                for (let i = 0; i < ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                    if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+                }
+                return null;
+            },
+            setCookie(name, value, days) {
+                let expires = "";
+                if (days) {
+                    let date = new Date();
+                    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                    expires = "; expires=" + date.toUTCString();
+                }
+                document.cookie = name + "=" + (value || "") + expires + "; path=/";
+            },
+
+            // --- 分类模块 (TreeView) (保持不变，但事件处理需要调整到 SidebarComponent) ---
+            initCategories() {
+                const apiUrl = prefix_url + '/get_blog_columns';
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message && data.message.length > 0) {
+                            this.categories = this.generateCategoryList(data.message);
+                        } else {
+                            console.warn("API 返回分类数据为空数组:", data);
+                            document.getElementById('treeview').textContent = "暂无数据";
+                        }
+                    })
+                    .catch(error => {
+                        console.error("API 请求分类数据错误:", error);
+                        document.getElementById('treeview').textContent = "加载分类数据失败";
+                    });
+            },
+            generateCategoryList(data, level = 1) {
+                return data.map(item => {
+                    const node = {
+                        text: item.column_name,
+                        href: '#',
+                        selectable: false,
+                        state: {
+                            expanded: false
+                        },
+                        data: {
+                            columnId: item.column_id
+                        },
+                        class: `level-${level}`
+                    };
+
+                    if (item.children && item.children.length > 0) {
+                        node.nodes = this.generateCategoryList(item.children, level + 1);
+                    } else {
+                        node.href = 'javascript:void(0);';
+                        node.selectable = true;
+                    }
+                    return node;
+                });
+            },
+
+
+            // --- 文章模块 (PostList) (保持不变，但滚动加载事件处理需要调整到 PostListComponent) ---
+            initPosts() {
+                this.loadPosts();
+            },
+            async loadPosts(page = 1) {
+                if (this.isLoadingPosts) return;
+                this.isLoadingPosts = true;
+
+                const apiUrl = `${prefix_url}/get_all_blog/${this.currentCategoryId}/${page}/15`;
+                console.log("加载文章，第 " + page + " 页，URL: " + apiUrl);
+
+                try {
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+
+                    if (page === 1 && data.code !== 200) {
+                        this.posts = [];
+                    }
+
+                    if (data.message && data.message.length > 0) {
+                        const newPosts = data.message;
+                        this.posts = [...this.posts, ...newPosts];
+                        this.currentPage = page + 1;
+                    } else {
+                        this.allPostsLoaded = true;
+                        if (page === 1) {
+                            this.posts = [];
+                        }
+                        if (page > 1) {
+                            console.log("没有更多文章了");
+                        } else if (page === 1) {
+                            console.log("暂无文章");
+                        }
+                    }
+                } catch (error) {
+                    console.error("加载文章失败:", error);
+                    if (page === 1) {
+                        this.posts = [];
+                        console.error("首次加载文章失败");
+                    }
+                } finally {
+                    this.isLoadingPosts = false;
+                    this.applyTheme(this.currentThemeData);
+                }
+            },
+            loadPostsByCategory(categoryId) {
+                this.currentCategoryId = categoryId;
+                this.currentPage = 1;
+                this.allPostsLoaded = false;
+                this.posts = [];
+                this.loadPosts();
+            },
+            loadMorePosts() {
+                if (this.allPostsLoaded || this.isLoadingPosts) return;
+                this.loadPosts(this.currentPage);
+            },
+
+
+            // --- Header 文字动画 (保持不变) ---
+            animateHeaderText() {
+                const text = this.animatedHeaderText;
+                const textArray = text.split('');
+                const animatedTextElement = document.getElementById('animated-text');
+                animatedTextElement.innerHTML = '';
+                textArray.forEach((char, index) => {
+                    animatedTextElement.innerHTML += `<span style="animation-delay: ${index * 0.2}s">${char}</span>`;
+                });
+
+                setInterval(() => {
+                    animatedTextElement.innerHTML = '';
+                    textArray.forEach((char, index) => {
+                        animatedTextElement.innerHTML += `<span style="animation-delay: ${index * 0.2}s">${char}</span>`;
+                    });
+                }, (textArray.length * 200) + 3000);
+            },
+
+            // --- 监听 header 颜色变化 (保持不变) ---
+            headerScrollListener() {
+                window.addEventListener('scroll', () => {
+                    const blogTitle = document.querySelector('.blog-title');
+                    const tags = document.querySelector('.tags');
+                    if (window.scrollY > 50) {
+                        blogTitle.style.color = '#000';
+                        tags.style.color = '#000';
+                    } else {
+                        blogTitle.style.color = '#fff';
+                        tags.style.color = '#fff';
+                    }
+                });
+            }
+        },
+        components: {
+            HeaderComponent,
+            SidebarComponent,
+            PostListComponent
+        }
+    }).mount('#app');
 </script>
+</body>
+</html>
