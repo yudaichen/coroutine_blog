@@ -146,20 +146,6 @@ namespace fast::net
             t.join();
     }
 
-
-    void fast::net::Server::add_route_rest_full(const std::string& method,
-                                                const std::string& path,
-                                                fast::net::Router::ParamHandler handler)
-    {
-        router_.add_route_rest_full(method, path, std::move(handler));
-    }
-
-    void fast::net::Server::add_route(const std::string& method, const std::string& path,
-                                      fast::net::Router::NoParamHandler handler)
-    {
-        router_.add_route(method, path, std::move(handler));
-    }
-
     asio::awaitable<void> fast::net::Server::detect_session(beast::tcp_stream stream,
                                                             asio::ssl::context& ctx,
                                                             beast::string_view doc_root,
@@ -263,9 +249,9 @@ namespace fast::net
             }
 
             auto req = parser.release();
-            auto target = std::string(req.target());
 
-            if (target.find("/static/") == 0)
+            if (auto target = std::string(req.target());
+                target.find("/static/") == 0)
             {
                 co_await server.router_.handle_static_request(stream, buffer, doc_root,
                                                               std::move(req));
@@ -292,11 +278,13 @@ namespace fast::net
             if (!res.keep_alive())
             {
                 co_await beast::http::async_write(stream, std::move(res));
+                beast::get_lowest_layer(stream).close(); // 及时关闭连接
                 co_return;
             }
 
             co_await beast::http::async_write(stream, std::move(res));
         }
+        beast::get_lowest_layer(stream).close(); // 及时关闭连接
     }
 
     template <typename Stream>
@@ -370,6 +358,8 @@ namespace fast::net
 
         if (ec_close && ec_close != boost::asio::ssl::error::stream_truncated)
             throw boost::system::system_error{ec_close};
+        beast::get_lowest_layer(stream).close(); // 及时关闭连接
+        co_return;
     }
 
     asio::awaitable<void> fast::net::Server::listen(fast::net::task_group& task_group, asio::ssl::context& ctx,
@@ -431,7 +421,7 @@ namespace fast::net
 
         // 等待所有任务完成
         auto [ec] = co_await task_group.async_wait(
-            asio::as_tuple(asio::cancel_after(std::chrono::seconds{1})));
+            asio::as_tuple(asio::cancel_after(std::chrono::seconds{5})));
 
         if (ec == boost::asio::error::operation_aborted)
         {
@@ -516,5 +506,17 @@ template asio::awaitable<void> fast::net::Server::run_websocket_session<asio::ss
     beast::string_view doc_root,
     fast::net::Server &server);
 }
+
+template asio::awaitable<void> fast::net::Server::run_session<beast::tcp_stream>(
+    beast::tcp_stream &stream,
+    beast::flat_buffer &buffer,
+    beast::string_view doc_root,
+    fast::net::Server &server);
+
+template asio::awaitable<void> fast::net::Server::run_session<asio::ssl::stream<beast::tcp_stream>>(
+    asio::ssl::stream<beast::tcp_stream> &stream,
+    beast::flat_buffer &buffer,
+    beast::string_view doc_root,
+    fast::net::Server &server);
 
 // namespace fast::net

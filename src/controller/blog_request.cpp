@@ -122,12 +122,12 @@ namespace fast::blog
     void set_routines(fast::net::Server& server)
     {
 
-        server.add_route("GET", "/get_blog_columns", get_blog_columns);
+        server.get_router().add_route("GET", "/get_blog_columns", get_blog_columns);
 
-        server.add_route_rest_full("GET", "/get_all_blog/{id}/{page}/{page_size}", get_all_blog);
+        server.get_router().add_route_rest_full("GET", "/get_all_blog/{id}/{page}/{page_size}", get_all_blog);
 
-        server.add_route_rest_full("POST", "/blog_full_text/{page}/{page_size}", add_route_rest_full);
+        server.get_router().add_route_rest_full("POST", "/blog_full_text/{page}/{page_size}", add_route_rest_full);
 
-        server.add_route_rest_full("GET", "/get_one_blog/{id}", get_one_blog);
+        server.get_router().add_route_rest_full("GET", "/get_one_blog/{id}", get_one_blog);
     }
 };

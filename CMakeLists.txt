@@ -18,6 +18,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-trace")
 endif ()
 
+# 启用增量编译
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra")
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE) # 避免全局优化影响增量编译
+
 # 本地项目-包含目录
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 

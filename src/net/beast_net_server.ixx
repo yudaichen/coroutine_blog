@@ -49,6 +49,7 @@ export namespace fast::net {
 
         void add_route_rest_full(const std::string &method, const std::string &path, Router::ParamHandler handler);
         void add_route(const std::string &method, const std::string &path, Router::NoParamHandler handler);
+        [[nodiscard]] Router &get_router() { return router_; }
 
     private:
         asio::net::tcp::endpoint endpoint_;
@@ -59,6 +60,8 @@ export namespace fast::net {
         asio::ssl::context ctx_;
         task_group task_group_;
         Router router_;
+
+      private:
         std::unordered_map<std::string, SessionData> sessions_;
         std::unordered_map<std::string, std::shared_ptr<asio::steady_timer>> session_timers_;
 
