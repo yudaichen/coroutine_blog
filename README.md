@@ -11,6 +11,10 @@ C++ 标准：C++23，且强制要求支持该标准。
 
 编译器：llvm-20 clang-20
 
+## 构建方法
+
+    cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=./cmake/clang.toolchain.cmake -S . -B build
+
 
 ## 设置链接器标志以使用libc++
 ## 启用 C++20 模块支持
@@ -155,29 +159,64 @@ https://apt.llvm.org/
     sudo apt update
     sudo apt install clang-19 libclang-common-19-dev
 
-## 编译Boost库
-### Linux：
-使用b2工具编译Boost库，指定Clang作为编译器，并使用libc++：
+## Boost 库使用 Clang 编译器的编译方法
 
-    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
-如果需要编译特定的Boost库，可以使用--with-<library>参数，例如：
+### 一、编译准备
+在开始编译 Boost 之前，请确保已经安装了 Clang 编译器，并且版本支持 C++20 标准。同时，从 [Boost 官方网站](https://www.boost.org/) 下载所需的 Boost 源码包，并解压到指定目录。
 
-    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++" --with-thread --with-system --with-regex
-### Windows：
-使用b2工具编译Boost库，指定Clang作为编译器，并使用libc++：
+### 二、使用 `bootstrap.sh` 脚本初始化
+#### 2.1 基础初始化
+在解压后的 Boost 源码根目录下，打开终端，执行以下命令使用 `bootstrap.sh` 脚本来初始化编译环境，指定使用 Clang 工具集：
+```bash
+./bootstrap.sh --with-toolset=clang
+```
+这个命令会根据 Clang 工具集生成必要的构建文件，为后续的编译做准备。
 
-    b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++"
-如果需要编译特定的Boost库，可以使用--with-<library>参数：
+#### 2.2 特定库初始化（可选）
+如果你只需要编译特定的库，例如 `cobalt` 库，可以使用以下命令：
+```bash
+./bootstrap.sh --with-libraries=cobalt
+```
+此命令会在初始化时仅针对 `cobalt` 库进行准备。
 
-    b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++" --with-thread --with-system --with-regex
-### 安装Boost库
-   编译完成后，可以将生成的库文件安装到指定目录。例如：
+### 三、配置 `project-config.jam` 文件
+#### 3.1 编辑文件
+使用文本编辑器打开 `project-config.jam` 文件，该文件通常位于 Boost 源码根目录下。
 
-    ./b2 install --prefix=/path/to/boost/install
-   或在Windows上：
-    b2 install --prefix=C:\path\to\boost\install
-   
-## mysql
+#### 3.2 指定 Clang 编译器及相关参数
+在 `project-config.jam` 文件中添加以下内容，以指定使用 Clang 编译器，并设置必要的编译和链接标志：
+```plaintext
+using clang : : clang++-20 : <cxxflags>"-stdlib=libc++" <linkflags>"-stdlib=libc++ -lc++abi" ;
+```
+这里的 `clang++-20` 表示使用 Clang 20 版本的 C++ 编译器，`-stdlib=libc++` 用于指定使用 `libc++` 标准库，`-lc++abi` 用于链接 `libc++` 的 ABI 库。
+
+### 四、使用 `b2` 进行编译
+
+#### 4.1 完整编译
+执行以下命令进行完整的编译：
+```bash
+./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++ -lc++abi" --build-type=complete stage threading=multi cxxstd=20 --layout=versioned
+```
+- `toolset=clang`：指定使用 Clang 作为编译工具集。
+- `cxxflags="-stdlib=libc++"`：设置 C++ 编译标志，使用 `libc++` 标准库。
+- `linkflags="-stdlib=libc++ -lc++abi"`：设置链接标志，使用 `libc++` 标准库并链接其 ABI 库。
+- `--build-type=complete`：进行完整的构建，编译所有可用的库配置。
+- `stage`：将编译好的库文件安装到 `stage` 目录下。
+- `threading=multi`：启用多线程支持。
+- `cxxstd=20`：指定使用 C++20 标准进行编译。
+- `--layout=versioned`：使用版本化的目录布局，便于区分不同版本的库。
+
+#### 4.2 特定库编译（对应步骤 2.2）
+如果在步骤 2.2 中仅针对 `cobalt` 库进行了初始化，那么可以使用以下命令编译 `cobalt` 库：
+```bash
+./b2 --with-libraries=cobalt link=shared threading=multi cxxstd=20
+```
+- `--with-libraries=cobalt`：仅编译 `cobalt` 库。
+- `link=shared`：编译为共享库。
+- `threading=multi`：启用多线程支持。
+- `cxxstd=20`：指定使用 C++20 标准进行编译。
+
+## ubuntu mysql启动
 
     sudo systemctl status mysql
     sudo systemctl start mysql

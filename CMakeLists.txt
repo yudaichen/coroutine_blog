@@ -183,3 +183,27 @@ foreach (lib ${BOOST_LIBS})
     endif ()
 endforeach ()
 
+function(help_conan_2)
+
+    note("\n\n\n\n*****************************use conan2.******************************\n")
+    note("debug:   cd cmake/debug  conan install ../.. -of . --build missing -s build_type=Debug")
+    note("release: cd cmake/debug  conan install ../.. -of . --build missing -s build_type=Release\n")
+    note("-of   conan_toolchain.cmake 文件输出目录
+
+    clang版本的编译：
+    ./bootstrap.sh --with-toolset=clang
+
+    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++ -lc++abi" --build-type=complete stage threading=multi cxxstd=20 --layout=versioned
+
+    编辑 project-config.jam 文件
+    在 project-config.jam 文件中，指定使用 Clang：
+    using clang : : clang++-20 : <cxxflags>"-stdlib=libc++" <linkflags>"-stdlib=libc++ -lc++abi" ;
+
+    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++ -lc++abi" --build-type=complete stage threading=multi cxxstd=20 --layout=versioned
+
+
+/bootstrap.sh --with-libraries=cobalt
+./b2 --with-libraries=cobalt link=shared threading=multi cxxstd=20")
+    note("*****************************end conan*****************************\n\n\n\n")
+
+endfunction()
