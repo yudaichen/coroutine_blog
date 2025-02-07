@@ -80,9 +80,16 @@ if (CCACHE_PROGRAM)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_PROGRAM})
 endif ()
 
+# 添加子模块目录
+add_subdirectory(third_party/json)
+
+# 设置 JWT_EXTERNAL_NLOHMANN_JSON 为 ON
+set(JWT_EXTERNAL_NLOHMANN_JSON ON CACHE BOOL "Use external nlohmann-json library" FORCE)
+add_subdirectory(third_party/jwt-cpp)
+
+
 # 添加可执行文件
 add_executable(asio_blog ${CMAKE_CURRENT_SOURCE_DIR}/run/main.cpp ${MODULES_FILES} ${CURRENT_HEADERS} ${CURRENT_SOURCE})
-
 # 设置模块代码
 target_sources(asio_blog
         PUBLIC
@@ -154,6 +161,10 @@ elseif (WIN32)
             ${OPENSSL_LIBRARIES}
     )
 endif ()
+
+# 链接 jwt-cpp 库到你的目标可执行文件或库
+target_link_libraries(asio_blog jwt-cpp nlohmann_json::nlohmann_json)
+
 
 # 链接 Boost 库
 foreach (lib ${BOOST_LIBS})

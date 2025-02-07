@@ -87,6 +87,78 @@ server_error(beast::http::request<beast::http::string_body> &&req, beast::string
   return res;
 }
 
+// 辅助函数：解析http分片的 Range 头部
+bool parse_range_header(const std::string& range_header, size_t file_size, size_t& start, size_t& end) {
+  const std::string prefix = "bytes=";
+  if (range_header.compare(0, prefix.size(), prefix) != 0) {
+    return false;
+  }
+  std::string range_str = range_header.substr(prefix.size());
+  size_t dash_pos = range_str.find('-');
+  if (dash_pos == std::string::npos) {
+    return false;
+  }
+
+  std::string start_str = range_str.substr(0, dash_pos);
+  std::string end_str = range_str.substr(dash_pos + 1);
+
+  if (start_str.empty() && end_str.empty()) {
+    return false;
+  }
+
+  try {
+    if (!start_str.empty() && !end_str.empty()) {
+      start = std::stoull(start_str);
+      end = std::stoull(end_str);
+    } else if (end_str.empty()) {
+      start = std::stoull(start_str);
+      end = file_size - 1;
+    } else {
+      size_t suffix_len = std::stoull(end_str);
+      if (suffix_len > file_size) {
+        suffix_len = file_size;
+      }
+      start = file_size - suffix_len;
+      end = file_size - 1;
+    }
+  } catch (...) {
+    return false;
+  }
+
+  if (start >= file_size || end >= file_size || start > end) {
+    return false;
+  }
+
+  return true;
+}
+
+// 生成 416 Range Not Satisfiable 响应
+template <class Body, class Allocator>
+beast::http::response<beast::http::string_body> range_not_satisfiable(beast::http::request<Body, beast::http::basic_fields<Allocator>>&& req, size_t size) {
+  beast::http::response<beast::http::string_body> res{beast::http::status::range_not_satisfiable, req.version()};
+  res.set(beast::http::field::server, "bander v1.0");
+  res.set(beast::http::field::content_type, "text/html");
+  res.content_length(0);
+  res.keep_alive(req.keep_alive());
+  res.set(beast::http::field::content_range, "bytes */" + std::to_string(size));
+  return res;
+}
+
+// 生成 206 Partial Content 响应
+template <class Body, class Allocator>
+beast::http::response<beast::http::file_body> partial_content(beast::http::request<Body, beast::http::basic_fields<Allocator>>&& req,
+                                                beast::http::file_body::value_type&& body,
+                                                size_t start, size_t end, size_t file_size) {
+  beast::http::response<beast::http::file_body> res{beast::http::status::partial_content, req.version()};
+  res.set(beast::http::field::server, "bander v1.0");
+  res.content_length(end - start + 1);
+  res.keep_alive(req.keep_alive());
+  res.set(beast::http::field::content_range,
+          "bytes " + std::to_string(start) + "-" + std::to_string(end) + "/" + std::to_string(file_size));
+  res.body() = std::move(body);
+  return res;
+}
+
 
 }
 

@@ -1,0 +1,6 @@
+[submodule "third_party/jwt-cpp"]
+	path = third_party/jwt-cpp
+	url = git@github.com:Thalhammer/jwt-cpp.git
+[submodule "third_party/json"]
+	path = third_party/json
+	url = git@github.com:nlohmann/json.git

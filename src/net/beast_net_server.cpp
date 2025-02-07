@@ -48,8 +48,9 @@ namespace fast::net
                 if (tg_)
                 {
                     auto lg = std::lock_guard{tg_->mtx_};
-                    if (tg_->css_.erase(cs_) == tg_->css_.end())
-                        tg_->cv_.cancel();
+                    tg_->css_.erase(cs_); // 删除取消槽
+                    if (tg_->css_.empty()) // 正确判断 css_ 是否为空
+                        tg_->cv_.cancel(); // 如果 css_ 为空，则发送信号
                 }
             }
         };
@@ -369,7 +370,8 @@ namespace fast::net
     {
         asio::cancellation_state cs = co_await asio::this_coro::cancellation_state;
         auto executor = co_await asio::this_coro::executor;
-        auto acceptor = asio::net::tcp::acceptor{executor, endpoint};
+        //auto acceptor = asio::net::tcp::acceptor{executor, endpoint};
+        acceptor_ = std::make_unique<asio::net::tcp::acceptor>(executor, endpoint);
 
         co_await asio::this_coro::reset_cancellation_state(
             asio::enable_total_cancellation());
@@ -377,7 +379,7 @@ namespace fast::net
         while (cs.cancelled()== asio::cancellation_type::none)
         {
             auto socket_executor = asio::make_strand(executor);
-            asio::net::tcp::socket socket = co_await acceptor.async_accept(
+            asio::net::tcp::socket socket = co_await acceptor_->async_accept(
                 socket_executor, asio::use_awaitable);
 
             auto remote_ip = socket.remote_endpoint().address().to_string();
@@ -399,8 +401,7 @@ namespace fast::net
                                    catch (std::exception& e)
                                    {
                                        // 不管这个错误
-                                       // std::cerr << "Error in session: " << e.what() <<
-                                       // "\n";
+                                       std::cerr << "Error in session: " << e.what();
                                    }
                                }
                            }));
@@ -418,13 +419,13 @@ namespace fast::net
         std::cout << "Received signal: " << sig << "\n";
         std::cout << "Gracefully cancelling child tasks...\n";
 
-        task_group.emit(asio::cancellation_type::total);
+        task_group.emit(asio::cancellation_type::terminal);
         std::cout << "Emitted total cancellation signal.\n"; // Logging (Improvement 4)
 
 
         // 等待所有任务完成
         auto [ec] = co_await task_group.async_wait(
-            asio::as_tuple(asio::cancel_after(std::chrono::seconds{5})));
+            asio::as_tuple(asio::cancel_after(std::chrono::seconds{10})));
 
         if (ec == boost::asio::error::operation_aborted)
         {
@@ -436,9 +437,6 @@ namespace fast::net
         }
 
         std::cout << "Child tasks completed.\n"; // Logging (Improvement 4)
-
-        session_timers_.clear(); // Clear session timers (Improvement 2 - Precautionary)
-        sessions_.clear();      // Clear sessions (Improvement 2 - Precautionary)
 
         ioc.stop();
         std::cout << "io_context stopped.\n"; // Logging (Improvement 4)

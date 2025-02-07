@@ -257,6 +257,7 @@ using boost::beast::tcp_stream;
 using boost::beast::buffers_to_string;
 using boost::beast::get_lowest_layer;
 
+
 // --- HTTP 支持 ---
 namespace http {
 using boost::beast::http::dynamic_body;
@@ -268,7 +269,7 @@ using boost::beast::http::response;
 using boost::beast::http::status;
 using boost::beast::http::string_body;
 using boost::beast::http::verb;
-
+using boost::beast::http::basic_fields;
 using boost::beast::http::request_parser;
 // HTTP 工厂函数
 template <typename Body = string_body,

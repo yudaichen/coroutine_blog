@@ -60,6 +60,7 @@ export namespace fast::net {
         asio::ssl::context ctx_;
         task_group task_group_;
         Router router_;
+        std::unique_ptr<asio::net::tcp::acceptor> acceptor_;
 
       private:
         std::unordered_map<std::string, SessionData> sessions_;
