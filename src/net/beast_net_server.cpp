@@ -67,7 +67,7 @@ namespace fast::net
             cs.emit(type);
     }
 
-    template <typename CompletionToken>
+    template <typename  CompletionToken>
     auto task_group::async_wait(CompletionToken&& completion_token)
     {
         return asio::async_compose<CompletionToken, void(boost::system::error_code)>(
@@ -106,7 +106,7 @@ namespace fast::net
                    mysql::connection_pool& pool)
         : endpoint_(address, port), doc_root_(doc_root), threads_(threads),
           protocol_(protocol), ioc_(threads), ctx_(asio::ssl::context::tlsv12),
-          task_group_(ioc_.get_executor()), database_(pool)
+          task_group_(ioc_.get_executor()),database_(pool), session_(ioc_,database_)
     {
         if (protocol_ == Protocol::HTTPS || protocol_ == Protocol::WebSockets)
         {
@@ -206,7 +206,7 @@ namespace fast::net
         }
     }
 
-    template <typename Stream>
+    template <fast::net::ValidStream Stream>
     asio::awaitable<void>
     fast::net::Server::run_session(Stream& stream, beast::flat_buffer& buffer,
                                    beast::string_view doc_root, Server& server)
@@ -259,7 +259,7 @@ namespace fast::net
                 continue;
             }
 
-            auto session = server.get_or_create_session(beast::get_lowest_layer(stream)
+            auto session = server.session_.get_or_create_session(beast::get_lowest_layer(stream)
                                                         .socket()
                                                         .remote_endpoint()
                                                         .address()
@@ -288,7 +288,7 @@ namespace fast::net
         beast::get_lowest_layer(stream).close(); // 及时关闭连接
     }
 
-    template <typename Stream>
+    template <fast::net::ValidStream Stream>
     asio::awaitable<void>
     fast::net::Server::run_websocket_session(Stream& stream, beast::flat_buffer& buffer,
                                              beast::http::request<beast::http::string_body> req,
@@ -335,7 +335,7 @@ namespace fast::net
                 beast::http::status::ok,
                 ws_req.version()
             };
-            auto session = server.get_or_create_session(beast::get_lowest_layer(stream)
+            auto session = server.session_.get_or_create_session(beast::get_lowest_layer(stream)
                                                         .socket()
                                                         .remote_endpoint()
                                                         .address()
@@ -383,14 +383,14 @@ namespace fast::net
                 socket_executor, asio::use_awaitable);
 
             auto remote_ip = socket.remote_endpoint().address().to_string();
-            auto session = create_session(remote_ip);
+            auto session = session_.create_session(remote_ip);
 
             asio::co_spawn(std::move(socket_executor),
                            detect_session(beast::tcp_stream(std::move(socket)), ctx,
                                           doc_root, protocol),
                            task_group.adapt([remote_ip, this](std::exception_ptr e)
                            {
-                               asio::co_spawn(ioc_, remove_session(remote_ip),
+                               asio::co_spawn(ioc_, session_.remove_session(remote_ip),
                                               asio::detached);
                                if (e)
                                {
@@ -441,90 +441,5 @@ namespace fast::net
         ioc.stop();
         std::cout << "io_context stopped.\n"; // Logging (Improvement 4)
     }
-
-    fast::net::SessionData& fast::net::Server::get_or_create_session(const std::string& ip)
-    {
-        auto it = sessions_.find(ip);
-        if (it == sessions_.end())
-        {
-            it = sessions_.emplace(ip, SessionData(ip, database_)).first;
-        }
-        it->second.update_last_access_time();
-        return it->second;
-    }
-
-    fast::net::SessionData& fast::net::Server::create_session(const std::string& ip)
-    {
-        auto it = sessions_.emplace(ip, SessionData(ip, database_)).first;
-        auto timer =
-            std::make_shared<asio::steady_timer>(ioc_, std::chrono::seconds(60));
-        session_timers_[ip] = timer;
-
-        timer->async_wait([this, ip](const boost::system::error_code& ec)
-        {
-            if (!ec)
-            {
-                asio::co_spawn(ioc_, remove_session(ip), asio::detached);
-            }
-        });
-
-        return it->second;
-    }
-
-    asio::awaitable<void> fast::net::Server::remove_session(const std::string& ip)
-    {
-        auto it = sessions_.find(ip);
-        if (it != sessions_.end())
-        {
-            auto now = std::chrono::steady_clock::now();
-            if (now - it->second.get_last_access_time() >= std::chrono::minutes(30))
-            {
-                sessions_.erase(it);
-                session_timers_.erase(ip);
-            }
-            else
-            {
-                auto timer = session_timers_[ip];
-                timer->expires_after(std::chrono::minutes(30) -
-                    (now - it->second.get_last_access_time()));
-                timer->async_wait([this, ip](const boost::system::error_code& ec)
-                {
-                    if (!ec)
-                    {
-                        asio::co_spawn(ioc_, remove_session(ip), asio::detached);
-                    }
-                });
-            }
-        }
-        co_return;
-    }
-
-// 显式实例化模板
-template asio::awaitable<void> fast::net::Server::run_websocket_session<beast::tcp_stream>(
-    beast::tcp_stream &stream,
-    beast::flat_buffer &buffer,
-    beast::http::request<beast::http::string_body> req,
-    beast::string_view doc_root,
-    fast::net::Server &server);
-
-template asio::awaitable<void> fast::net::Server::run_websocket_session<asio::ssl::stream<beast::tcp_stream>>(
-    asio::ssl::stream<beast::tcp_stream> &stream,
-    beast::flat_buffer &buffer,
-    beast::http::request<beast::http::string_body> req,
-    beast::string_view doc_root,
-    fast::net::Server &server);
-
-
-template asio::awaitable<void> fast::net::Server::run_session<beast::tcp_stream>(
-    beast::tcp_stream &stream,
-    beast::flat_buffer &buffer,
-    beast::string_view doc_root,
-    fast::net::Server &server);
-
-template asio::awaitable<void> fast::net::Server::run_session<asio::ssl::stream<beast::tcp_stream>>(
-    asio::ssl::stream<beast::tcp_stream> &stream,
-    beast::flat_buffer &buffer,
-    beast::string_view doc_root,
-    fast::net::Server &server);
 }
 // namespace fast::net

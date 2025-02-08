@@ -12,6 +12,11 @@ import router_process;
 
 export namespace fast::net {
 
+// 定义 ValidStream concept
+template<typename Stream>
+concept ValidStream =
+    std::is_same_v<Stream, beast::tcp_stream> ||
+    std::is_same_v<Stream, asio::ssl::stream<beast::tcp_stream>>;
 
     class task_group {
         std::mutex mtx_;
@@ -61,21 +66,17 @@ export namespace fast::net {
         task_group task_group_;
         Router router_;
         std::unique_ptr<asio::net::tcp::acceptor> acceptor_;
-
-      private:
-        std::unordered_map<std::string, SessionData> sessions_;
-        std::unordered_map<std::string, std::shared_ptr<asio::steady_timer>> session_timers_;
-
         fast::mapper::Database database_;
+        fast::net::Session session_;
 
         asio::awaitable<void> detect_session(
             beast::tcp_stream stream, asio::ssl::context &ctx, beast::string_view doc_root, Protocol protocol);
 
-        template<typename Stream>
+        template<ValidStream Stream>
         static asio::awaitable<void> run_session(
             Stream &stream, beast::flat_buffer &buffer, beast::string_view doc_root, Server &server);
 
-        template<typename Stream>
+        template<ValidStream Stream>
         static asio::awaitable<void> run_websocket_session(
             Stream &stream,
             beast::flat_buffer &buffer,
@@ -91,10 +92,6 @@ export namespace fast::net {
             Protocol protocol);
 
         asio::awaitable<void> handle_signals(task_group &task_group, asio::io_context &ioc);
-
-        SessionData &get_or_create_session(const std::string &ip);
-        SessionData &create_session(const std::string &ip);
-        asio::awaitable<void> remove_session(const std::string &ip);
     };
 
 }
