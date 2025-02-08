@@ -26,76 +26,70 @@ private:
   fast::mapper::Database *database_;
 };
 
-class Session {
+class SessionManager {
 public:
-  Session(asio::io_context &ioc,fast::mapper::Database &pool)
-      : ioc_(ioc), database_pool_(pool) {}
+    SessionManager(asio::io_context& ioc, fast::mapper::Database& pool)
+        : ioc_(ioc), database_pool_(pool), strand_(ioc.get_executor()) {}
 
-  SessionData &get_or_create_session(const std::string &ip) {
-    auto it = sessions_.find(ip);
-    if (it == sessions_.end()) {
-      it = sessions_.emplace(ip, SessionData(ip, database_pool_))
-               .first; // 获取数据库连接
-      create_session_timer(ip);
-    }
-    it->second.update_last_access_time();
-    return it->second;
-  }
-
-  SessionData &create_session(const std::string &ip) {
-    auto it = sessions_.emplace(ip, SessionData(ip, database_pool_))
-                  .first; // 获取数据库连接
-    create_session_timer(ip);
-    return it->second;
-  }
-
-  asio::awaitable<void> remove_session(const std::string &ip) {
-    auto it = sessions_.find(ip);
-    if (it != sessions_.end()) {
-      auto now = std::chrono::steady_clock::now();
-      if (now - it->second.get_last_access_time() >= std::chrono::minutes(30)) {
-        sessions_.erase(it);
-        session_timers_.erase(ip);
-      } else {
-        reset_session_timer(ip);
-      }
-    }
-    co_return;
-  }
-
-private:
-  void create_session_timer(const std::string &ip) {
-    auto timer =
-        std::make_shared<asio::steady_timer>(ioc_, std::chrono::seconds(60));
-    session_timers_[ip] = timer;
-
-    timer->async_wait([this, ip](const boost::system::error_code &ec) {
-      if (!ec) {
-        asio::co_spawn(ioc_, remove_session(ip), asio::detached);
-      }
-    });
-  }
-
-  void reset_session_timer(const std::string &ip) {
-    auto it = sessions_.find(ip);
-    if (it != sessions_.end()) {
-      auto now = std::chrono::steady_clock::now();
-      auto timer = session_timers_[ip];
-      timer->expires_after(std::chrono::minutes(30) -
-                           (now - it->second.get_last_access_time()));
-      timer->async_wait([this, ip](const boost::system::error_code &ec) {
-        if (!ec) {
-          asio::co_spawn(ioc_, remove_session(ip), asio::detached);
+    // 获取或创建会话
+    asio::awaitable<SessionData*> get_or_create_session(const std::string& ip) {
+        co_await asio::post(strand_, asio::use_awaitable);
+        auto& session = sessions_[ip]; // 自动创建或获取现有会话
+        if (!session) {
+            session = std::make_unique<SessionData>(ip, database_pool_);
+            ++active_sessions_;
+            ++total_sessions_created_;
         }
-      });
+        session->update_last_access_time();
+        co_return session.get(); // 返回裸指针
     }
-  }
+
+    // 移除会话
+    asio::awaitable<void> remove_session(const std::string& ip) {
+        co_await asio::post(strand_, asio::use_awaitable);
+        auto it = sessions_.find(ip);
+        if (it != sessions_.end()) {
+            sessions_.erase(it);
+            --active_sessions_;
+            ++total_sessions_expired_;
+        }
+        co_return;
+    }
+
+    // 获取当前活跃会话数
+    std::size_t get_active_sessions() const noexcept {
+        return active_sessions_.load();
+    }
+
+    // 获取总创建的会话数
+    std::size_t get_total_sessions_created() const noexcept {
+        return total_sessions_created_.load();
+    }
+
+    // 获取总超时的会话数
+    std::size_t get_total_sessions_expired() const noexcept {
+        return total_sessions_expired_.load();
+    }
+
+    // 获取会话的平均生命周期（秒）
+    std::chrono::seconds get_average_session_lifetime() const noexcept {
+        auto total_lifetime = total_session_lifetime_.load();
+        auto total_expired = total_sessions_expired_.load();
+        if (total_expired == 0) return std::chrono::seconds(0);
+        return std::chrono::duration_cast<std::chrono::seconds>(total_lifetime / total_expired);
+    }
 
 private:
-  asio::io_context &ioc_;
-  fast::mapper::Database &database_pool_;
-  std::map<std::string, SessionData> sessions_;
-  std::map<std::string, std::shared_ptr<asio::steady_timer>> session_timers_;
+    asio::io_context& ioc_;
+    fast::mapper::Database& database_pool_;
+    asio::strand<asio::io_context::executor_type> strand_;
+    std::unordered_map<std::string, std::unique_ptr<SessionData>> sessions_;
+
+    // 统计指标
+    std::atomic<std::size_t> active_sessions_{0};          // 当前活跃会话数
+    std::atomic<std::size_t> total_sessions_created_{0};   // 总创建的会话数
+    std::atomic<std::size_t> total_sessions_expired_{0};   // 总超时的会话数
+    std::atomic<std::chrono::steady_clock::duration> total_session_lifetime_; // 总会话生命周期
 };
 
 } // namespace fast::net

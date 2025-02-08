@@ -1,6 +1,6 @@
-// #include <iostream>
+import std;
+import log;
 
-import std.compat;
 /**
 *[
   {
@@ -31,31 +31,30 @@ import std.compat;
 import std;
 import run_server;
 
-
 // TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-int main() {
-  // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
-  // <b>lang</b> variable name to see how CLion can help you rename it.
-  //std::locale::global(std::locale("zh_CN.UTF-8")); // 设置全局 locale
-  std::cout.imbue(std::locale()); // 使 cout 使用全局 locale
+int main()
+{
+    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
+    // <b>lang</b> variable name to see how CLion can help you rename it.
+    // std::locale::global(std::locale("zh_CN.UTF-8")); // 设置全局 locale
+    std::cout.imbue(std::locale()); // 使 cout 使用全局 locale
 
-  auto lang = "C++";
-  std::cout << "Hello and welcome to " << lang << "!\n";
+    auto lang = "C++";
+    std::cout << "Hello and welcome to " << lang << "!\n";
 
-  std::cout << "Hello and welcome to 控制台乱码 问题解决 " << lang << "!\n";
+    std::cout << "Hello and welcome to 控制台乱码 问题解决 " << lang << "!\n";
 
+    // 初始化日志系统
+    log::initialize_logger("logs/app.log");
 
-  for (int i = 1; i <= 5; i++) {
-    // TIP Press <shortcut actionId="Debug"/> to start debugging your code.
-    // We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/>
-    // breakpoint for you, but you can always add more by pressing
-    // <shortcut actionId="ToggleLineBreakpoint"/>.
-    std::cout << "i = " << i << std::endl;
-    std::cout << "i = " << i << std::endl;
-  }
-  run_server();
-  return 0;
+    // 记录日志
+    log::info("Hello, {}!", "spdlog");
+    log::error("This is an error message with value: {}", 42);
+
+    run_server();
+    log::shutdown_logger();
+    return 0;
 }
 
 // TIP See CLion help at <a

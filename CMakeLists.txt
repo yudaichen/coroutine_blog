@@ -87,6 +87,12 @@ add_subdirectory(third_party/json)
 set(JWT_EXTERNAL_NLOHMANN_JSON ON CACHE BOOL "Use external nlohmann-json library" FORCE)
 add_subdirectory(third_party/jwt-cpp)
 
+# 设置 SPDLOG_USE_STD_FORMAT 选项为 ON
+set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format instead of fmt library." FORCE)
+# 添加 spdlog 子模块
+add_subdirectory(third_party/spdlog)
+
+
 
 # 添加可执行文件
 add_executable(asio_blog ${CMAKE_CURRENT_SOURCE_DIR}/run/main.cpp ${MODULES_FILES} ${CURRENT_HEADERS} ${CURRENT_SOURCE})
@@ -163,7 +169,7 @@ elseif (WIN32)
 endif ()
 
 # 链接 jwt-cpp 库到你的目标可执行文件或库
-target_link_libraries(asio_blog jwt-cpp nlohmann_json::nlohmann_json)
+target_link_libraries(asio_blog jwt-cpp nlohmann_json::nlohmann_json spdlog)
 
 
 # 链接 Boost 库
@@ -183,7 +189,7 @@ foreach (lib ${BOOST_LIBS})
     endif ()
 endforeach ()
 
-function(help_conan_2)
+#[[function(help_conan_2)
 
     note("\n\n\n\n*****************************use conan2.******************************\n")
     note("debug:   cd cmake/debug  conan install ../.. -of . --build missing -s build_type=Debug")
@@ -206,4 +212,4 @@ function(help_conan_2)
 ./b2 --with-libraries=cobalt link=shared threading=multi cxxstd=20")
     note("*****************************end conan*****************************\n\n\n\n")
 
-endfunction()
+endfunction()]]
