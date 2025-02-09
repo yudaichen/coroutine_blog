@@ -86,7 +86,12 @@ using boost::asio::bind_cancellation_slot;
 using boost::asio::cancel_after;
 using boost::asio::consign;
 using boost::asio::default_completion_token_t;
-using boost::asio::detached;
+ //using boost::asio::detached;
+//BOOST_ASIO_INLINE_VARIABLE constexpr boost::asio::partial_as_tuple as_tuple;
+//BOOST_ASIO_INLINE_VARIABLE constexpr boost::asio::detached_t detached;
+
+//BOOST_ASIO_INLINE_VARIABLE constexpr boost::asio::deferred_t deferred;
+
 using boost::asio::enable_terminal_cancellation;
 using boost::asio::enable_total_cancellation;
 using boost::asio::make_strand;
@@ -360,6 +365,7 @@ inline auto make_connection(
 }
 
 // MySQL 异步操作
+/*
 template <typename CompletionToken>
 auto async_connect(connection<tcp_ssl_connection> &conn, const std::string &host, const std::string &user,
                    const std::string &password, const std::string &database, CompletionToken &&token)
@@ -370,6 +376,20 @@ auto async_connect(connection<tcp_ssl_connection> &conn, const std::string &host
 template <typename CompletionToken>
 auto async_execute(connection<tcp_ssl_connection> &conn, const std::string &query, results &result,
                    CompletionToken &&token)
+{
+    return conn.async_execute(query, result, std::forward<CompletionToken>(token));
+}
+
+template <typename CompletionToken>
+auto async_execute(connection<boost::mysql::tcp_connection> &conn, const std::string &query, results &result,
+                   CompletionToken &&token)
+{
+    return conn.async_execute(query, result, std::forward<CompletionToken>(token));
+}
+*/
+
+template <typename Connnet, typename CompletionToken>
+auto async_execute(Connnet &conn, const std::string &query, results &result, CompletionToken &&token)
 {
     return conn.async_execute(query, result, std::forward<CompletionToken>(token));
 }

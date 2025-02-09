@@ -200,6 +200,14 @@ asio::awaitable<void> fast::net::Server::detect_session(beast::tcp_stream stream
     log::info("检测 - 会话检测 - 地址 {} 的会话检测完成", remote_ip);
 }
 
+
+// 显式实例化 run_session 函数模板
+template asio::awaitable<void> fast::net::Server::run_session<beast::tcp_stream>(
+    beast::tcp_stream &stream, beast::flat_buffer &buffer, beast::string_view doc_root, Server &server);
+
+template asio::awaitable<void> fast::net::Server::run_session<asio::ssl::stream<beast::tcp_stream>>(
+    asio::ssl::stream<beast::tcp_stream> &stream, beast::flat_buffer &buffer, beast::string_view doc_root, Server &server);
+
 template <fast::net::ValidStream Stream>
 asio::awaitable<void> fast::net::Server::run_session(Stream &stream, beast::flat_buffer &buffer,
                                                      beast::string_view doc_root, Server &server)
@@ -295,6 +303,17 @@ asio::awaitable<void> fast::net::Server::run_session(Stream &stream, beast::flat
     log::info("下线 - 用户下线 - 地址 {}，UUID {} 下线", remote_ip, uuid);
     beast::get_lowest_layer(stream).close(); // 及时关闭连接
 }
+
+// 显式实例化声明
+template asio::awaitable<void> fast::net::Server::run_websocket_session<beast::tcp_stream>(
+    beast::tcp_stream &stream, beast::flat_buffer &buffer,
+    beast::http::request<beast::http::string_body> req,
+    beast::string_view doc_root, Server &server);
+
+template asio::awaitable<void> fast::net::Server::run_websocket_session<asio::ssl::stream<beast::tcp_stream>>(
+    asio::ssl::stream<beast::tcp_stream> &stream, beast::flat_buffer &buffer,
+    beast::http::request<beast::http::string_body> req,
+    beast::string_view doc_root, Server &server);
 
 template <fast::net::ValidStream Stream>
 asio::awaitable<void> fast::net::Server::run_websocket_session(Stream &stream, beast::flat_buffer &buffer,
@@ -464,6 +483,8 @@ asio::awaitable<void> fast::net::Server::handle_signals(fast::net::task_group &t
     ioc.stop();
     log::info("停止 - io_context - io_context 已停止");
 }
+
+
 
 } // namespace fast::net
 // namespace fast::net

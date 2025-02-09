@@ -1,11 +1,11 @@
 // mysql_connect.ixx
 module;
 
+export module mysql_connect;
+
 import std;
 import boost;
 import blog_mapper;
-
-export module mysql_connect;
 
 export namespace fast::mapper
 {

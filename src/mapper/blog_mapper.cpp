@@ -2,14 +2,14 @@ module;
 
 #include <boost/system/system_error.hpp>
 
+
+
+module blog_mapper;
 import boost;
 import blog_article_entity;
 import blog_column_entity;
 import std;
 import small_utils;
-
-module blog_mapper;
-
 namespace fast::mapper
 {
 

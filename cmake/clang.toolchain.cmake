@@ -43,3 +43,6 @@ add_compile_options(
         -Wno-unused-const-variable  # 禁用未使用的常量变量警告
         -Wno-unused-private-field   # 禁用未使用的私有字段警告
 )
+
+function(setting)
+endfunction()

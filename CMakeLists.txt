@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.30.5)
+cmake_minimum_required(VERSION 3.30)
 project(asio_blog)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -12,16 +12,17 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # https://gitlab.kitware.com/cmake/cmake/-/issues/25539
 set(CMAKE_CXX_EXTENSIONS ON)
 
+setting()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftime-trace")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-trace")
-endif ()
+# 根据编译器设置 C++20 选项
+#[[if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
+elseif (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++23")
+endif ()]]
 
-# 启用增量编译
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra")
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE) # 避免全局优化影响增量编译
-
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+message(STATUS "C++ standard: ${CMAKE_CXX_STANDARD}")
 # 本地项目-包含目录
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -44,20 +45,28 @@ file(GLOB_RECURSE CURRENT_SOURCE
 
 message("MODULES_FILES : ${MODULES_FILES}")
 
-# 定义宏
 add_definitions(-DBOOST_ASIO_DISABLE_VECTORIO)
 add_definitions(-DBOOST_ASIO_HAS_FILE)
 add_definitions(-DBOOST_ASIO_DISABLE_EPOLL)
 add_definitions(-DBOOST_ASIO_HAS_CO_AWAIT)
-add_definitions(-DASIO_HAS_FILE)
-add_definitions(-DASIO_DISABLE_EPOLL)
 
 # 判断操作系统
 if (UNIX)
-    # Boost 头路径
-    include_directories("/mnt/f/runtime/dep_lib/ubuntu24/clang-boost/release")
-    # Boost 库路径
-    set(BOOST_LIB_PATH "/mnt/f/runtime/dep_lib/ubuntu24/clang-boost/boost_1_87_0/stage/lib")
+    # 定义宏
+    add_definitions(-DASIO_HAS_FILE)
+    add_definitions(-DASIO_DISABLE_EPOLL)
+
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftime-trace")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftime-trace")
+    endif ()
+
+    # 启用增量编译
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -Wextra")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE) # 避免全局优化影响增量编译
+
+    # # 指定包含 BoostConfig.cmake 文件的目录
+    set(Boost_DIR "/mnt/f/runtime/dep_lib/ubuntu24/clang-boost/boost_1_87_0/stage/lib/cmake/Boost-1.87.0")
     add_definitions(-DBOOST_ASIO_HAS_IO_URING)
     add_definitions(-DASIO_HAS_IO_URING)
     include_directories(/usr/include)
@@ -66,9 +75,42 @@ if (UNIX)
     link_directories(/usr/lib/x86_64-linux-gnu)
 elseif (MSVC)
     # Boost 头路径
-    include_directories("F:\\runtime\\dep_lib\\win\\release")
+    #include_directories("F:\\runtime\\dep_lib\\win\\release")
     # Boost 库路径
-    set(BOOST_LIB_PATH "F:/runtime/dep_lib/win/boost_1_87_0/stage/lib")
+    set(Boost_DIR "F:/runtime/dep_lib/win/boost_1_87_0/stage/lib/cmake/Boost-1.87.0")
+endif ()
+
+# 列出需要的 Boost 组件
+set(BOOST_COMPONENTS
+        context
+        charconv
+        thread
+        fiber
+        system
+        date_time
+        timer
+        coroutine
+        cobalt
+        json
+        container
+        filesystem
+        url
+)
+
+# 设置 Boost 不使用多线程库
+set(Boost_USE_MULTITHREADED OFF)
+if (msvc)
+    set(Boost_USE_MULTITHREADED ON)
+    # 设置使用共享库
+    set(Boost_USE_STATIC_LIBS OFF)
+endif ()
+# 查找 Boost 库，使用 NO_DEFAULT_PATH 选项
+find_package(Boost 1.87.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+if (Boost_FOUND)
+    message(STATUS "Boost found: ${Boost_INCLUDE_DIRS}")
+    include_directories(${Boost_INCLUDE_DIRS})
+else ()
+    message(FATAL_ERROR "Boost not found")
 endif ()
 
 
@@ -81,18 +123,23 @@ if (CCACHE_PROGRAM)
 endif ()
 
 # 添加子模块目录
-add_subdirectory(third_party/json)
+add_subdirectory(third_party/nlohmann_json)
+if (NOT TARGET nlohmann_json)
+    add_library(nlohmann_json INTERFACE)
+    target_include_directories(nlohmann_json INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/third_party/json)
+endif ()
 
 # 设置 JWT_EXTERNAL_NLOHMANN_JSON 为 ON
-set(JWT_EXTERNAL_NLOHMANN_JSON ON CACHE BOOL "Use external nlohmann-json library" FORCE)
+#et(JWT_EXTERNAL_NLOHMANN_JSON ON CACHE BOOL "Use external nlohmann-json library" FORCE)
+set(JWT_BUILD_TESTS OFF CACHE BOOL "Stop jwt-cpp test " FORCE)
+set(JWT_BUILD_EXAMPLES OFF)
 add_subdirectory(third_party/jwt-cpp)
 
 # 设置 SPDLOG_USE_STD_FORMAT 选项为 ON
 set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format instead of fmt library." FORCE)
-# 添加 spdlog 子模块
 add_subdirectory(third_party/spdlog)
 
-
+add_subdirectory(third_party/googletest)
 
 # 添加可执行文件
 add_executable(asio_blog ${CMAKE_CURRENT_SOURCE_DIR}/run/main.cpp ${MODULES_FILES} ${CURRENT_HEADERS} ${CURRENT_SOURCE})
@@ -108,45 +155,8 @@ set_property(TARGET asio_blog PROPERTY
         CXX_MODULE_GENERATION_MODE "SEPARATE"
 )
 
-# 解决clion报错的问题
 if (UNIX)
-    set(LIBCXX_MODULE_DIRS "/usr/lib/llvm-20/share/libc++/v1")
-    add_library(unused_std_target STATIC)
-    target_sources(unused_std_target
-            PRIVATE
-            FILE_SET CXX_MODULES
-            BASE_DIRS ${LIBCXX_MODULE_DIRS}
-            FILES ${LIBCXX_MODULE_DIRS}/std.cppm ${LIBCXX_MODULE_DIRS}/std.compat.cppm)
-elseif (WIN32)
-    set(LIBCXX_MODULE_DIRS "F:/program/visul_studio/idea/VC/Tools/MSVC/14.42.34433/modules")
-    add_library(unused_std_target STATIC)
-    target_sources(unused_std_target
-            PRIVATE
-            FILE_SET CXX_MODULES
-            BASE_DIRS ${LIBCXX_MODULE_DIRS}
-            FILES ${LIBCXX_MODULE_DIRS}/std.ixx ${LIBCXX_MODULE_DIRS}/std.compat.ixx)
-
-endif ()
-
-# Boost 库列表
-set(BOOST_LIBS
-        boost_context
-        boost_charconv
-        boost_thread
-        boost_fiber
-        boost_system
-        boost_date_time
-        boost_timer
-        boost_coroutine
-        boost_cobalt
-        boost_json
-        boost_container
-        boost_filesystem
-        boost_url
-)
-if (UNIX)
-    # 添加库文件并链接 Boost 库
-    target_link_libraries(asio_blog
+    target_link_libraries(asio_blog PRIVATE
             pthread
             c++
             c++abi
@@ -156,60 +166,38 @@ if (UNIX)
             uring
     )
 elseif (WIN32)
-
-
     find_package(OpenSSL REQUIRED)
 
     include_directories("C:/Program Files/OpenSSL-Win64/include")
     include_directories(${OPENSSL_INCLUDE_DIRS})
-    # 添加库文件并链接 Boost 库
-    target_link_libraries(asio_blog
+    target_link_libraries(asio_blog PRIVATE
             ${OPENSSL_LIBRARIES}
     )
 endif ()
 
-# 链接 jwt-cpp 库到你的目标可执行文件或库
-target_link_libraries(asio_blog jwt-cpp nlohmann_json::nlohmann_json spdlog)
+target_link_libraries(asio_blog PRIVATE jwt-cpp nlohmann_json::nlohmann_json spdlog GTest::gtest
+        GTest::gtest_main ${Boost_LIBRARIES})
 
+target_compile_features(asio_blog PRIVATE cxx_std_23)
 
-# 链接 Boost 库
-foreach (lib ${BOOST_LIBS})
-    if (UNIX)
-        set(LIB_PATH ${BOOST_LIB_PATH}/lib${lib}.a)
-    elseif (MSVC)
-        string(REGEX REPLACE "^lib" "" lib_name ${lib})
-        set(LIB_PATH ${BOOST_LIB_PATH}\\${lib_name}-vc143-mt-gd-x64-1_87.lib)
-    endif ()
+# 解决clion 无法识别import std
+if (UNIX)
+    set(LIBCXX_MODULE_DIRS "/usr/lib/llvm-20/share/libc++/v1")
+    add_library(unused_std_target STATIC)
+    target_sources(unused_std_target
+            PRIVATE
+            FILE_SET CXX_MODULES
+            BASE_DIRS ${LIBCXX_MODULE_DIRS}
+            FILES ${LIBCXX_MODULE_DIRS}/std.cppm ${LIBCXX_MODULE_DIRS}/std.compat.cppm)
 
-    if (EXISTS ${LIB_PATH})
-        message(STATUS "Found library: ${LIB_PATH}")
-        target_link_libraries(asio_blog ${LIB_PATH})
-    else ()
-        message(FATAL_ERROR "Library not found: ${LIB_PATH}")
-    endif ()
-endforeach ()
-
-#[[function(help_conan_2)
-
-    note("\n\n\n\n*****************************use conan2.******************************\n")
-    note("debug:   cd cmake/debug  conan install ../.. -of . --build missing -s build_type=Debug")
-    note("release: cd cmake/debug  conan install ../.. -of . --build missing -s build_type=Release\n")
-    note("-of   conan_toolchain.cmake 文件输出目录
-
-    clang版本的编译：
-    ./bootstrap.sh --with-toolset=clang
-
-    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++ -lc++abi" --build-type=complete stage threading=multi cxxstd=20 --layout=versioned
-
-    编辑 project-config.jam 文件
-    在 project-config.jam 文件中，指定使用 Clang：
-    using clang : : clang++-20 : <cxxflags>"-stdlib=libc++" <linkflags>"-stdlib=libc++ -lc++abi" ;
-
-    ./b2 toolset=clang cxxflags="-stdlib=libc++" linkflags="-stdlib=libc++ -lc++abi" --build-type=complete stage threading=multi cxxstd=20 --layout=versioned
-
-
-/bootstrap.sh --with-libraries=cobalt
-./b2 --with-libraries=cobalt link=shared threading=multi cxxstd=20")
-    note("*****************************end conan*****************************\n\n\n\n")
-
-endfunction()]]
+    target_compile_features(unused_std_target PRIVATE cxx_std_23)
+elseif (WIN32)
+    set(LIBCXX_MODULE_DIRS "F:/program/visul_studio/idea/VC/Tools/MSVC/14.42.34433/modules")
+    add_library(unused_std_target STATIC)
+    target_sources(unused_std_target
+            PRIVATE
+            FILE_SET CXX_MODULES
+            BASE_DIRS ${LIBCXX_MODULE_DIRS}
+            FILES ${LIBCXX_MODULE_DIRS}/std.ixx ${LIBCXX_MODULE_DIRS}/std.compat.ixx)
+    target_compile_features(unused_std_target PRIVATE cxx_std_23)
+endif ()

@@ -1,10 +1,20 @@
 module;
 
 #include <boost/container/flat_map.hpp>
+// 具体引入所需的 Beast 头文件
+/*
+#include <boost/beast/http/message.hpp>
+#include <boost/beast/http/status.hpp>
+#include <boost/beast/http/field.hpp>
+#include <boost/beast/http/file_body.hpp>
+#include <boost/beast/http/string_body.hpp>
+*/
+
+export module net_common;
 import boost;
 import std;
-export module net_common;
 
+//using namespace boost;
 export namespace fast::net
 {
 

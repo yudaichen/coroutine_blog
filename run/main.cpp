@@ -46,14 +46,14 @@ int main()
     std::cout << "Hello and welcome to 控制台乱码 问题解决 " << lang << "!\n";
 
     // 初始化日志系统
-    log::initialize_logger("logs/app.log");
+    fast::log::initialize_logger("logs/app.log");
 
     // 记录日志
-    log::info("Hello, {}!", "spdlog");
-    log::error("This is an error message with value: {}", 42);
+    fast::log::info("Hello, {}!", "spdlog");
+    fast::log::error("This is an error message with value: {}", 42);
 
     run_server();
-    log::shutdown_logger();
+    fast::log::shutdown_logger();
     return 0;
 }
 

@@ -51,15 +51,16 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 # set(CMAKE_SYSROOT "C:/path/to/sysroot")
 
 # 额外的 MSVC 特定设置
-if(MSVC)
+function(setting)
     # 文件过大编译参数
     add_compile_options(/bigobj)
+    add_compile_options(/await:strict)
     # win32的宏必须设置定义
     add_compile_definitions(_WIN32_WINNT=0x0601)
     # 禁用某些警告（根据项目需求调整）
     add_compile_options(/wd4251)  # 示例：禁用4251警告
     # 设置运行时库（这里设置了多线程DLL版本）
-    foreach(flag_var
+    #[[foreach(flag_var
             CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
             CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO
             CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
@@ -67,8 +68,8 @@ if(MSVC)
         if(${flag_var} MATCHES "/MD")
             string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
         endif()
-    endforeach()
+    endforeach()]]
 
     # 设置PDB输出目录（可选）
     set(CMAKE_PDB_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/pdb")
-endif()
+endfunction()

@@ -4,9 +4,10 @@ module;
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
-export module log;
 
 import std;
+export module log;
+
 
 // 定义 ANSI 颜色转义序列
 namespace ansi_colors {
@@ -18,7 +19,7 @@ namespace ansi_colors {
     const std::string bold_on_red = "\033[1;41m";
 }
 
-export namespace log
+export namespace fast::log
 {
 
 // 初始化日志系统
@@ -31,13 +32,14 @@ inline void initialize_logger(const std::string &log_file)
 
         console_sink->set_pattern("%^[%Y-%m-%d %H:%M:%S.%e]%$ [%^%l%$] %v");
 
+
         // 自定义颜色映射，为不同日志级别设置颜色
-        console_sink->set_color(spdlog::level::trace, console_sink->green);
+        /*console_sink->set_color(spdlog::level::trace, console_sink->green);
         console_sink->set_color(spdlog::level::debug, console_sink->cyan);
         console_sink->set_color(spdlog::level::info, console_sink->green);
         console_sink->set_color(spdlog::level::warn, console_sink->yellow);
         console_sink->set_color(spdlog::level::err, console_sink->red);
-        console_sink->set_color(spdlog::level::critical, console_sink->bold_on_red);
+        console_sink->set_color(spdlog::level::critical, console_sink->bold_on_red);*/
 
         console_sink->set_level(spdlog::level::trace); // 允许输出 trace 级别的日志
 

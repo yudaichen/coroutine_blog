@@ -220,3 +220,9 @@ using clang : : clang++-20 : <cxxflags>"-stdlib=libc++" <linkflags>"-stdlib=libc
 
     sudo systemctl status mysql
     sudo systemctl start mysql
+
+## 如果你使用conan
+```bash
+   debug:   cd cmake/debug  conan install ../.. -of . --build missing -s build_type=Debug
+   release: cd cmake/debug  conan install ../.. -of . --build missing -s build_type=Release
+```

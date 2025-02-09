@@ -66,40 +66,40 @@ export void run_server()
     }
 
     // 记录创建服务器对象的日志
-    log::info("创建 - 服务器对象 - 正在进行");
+    fast::log::info("创建 - 服务器对象 - 正在进行");
     fast::net::Server server(asio::net::ip::make_address(address), port, doc_root, threads, protocol, pool);
-    log::info("创建 - 服务器对象 - 已完成");
+    fast::log::info("创建 - 服务器对象 - 已完成");
 
     // 记录设置路由的日志
-    log::info("设置 - 服务器路由 - 正在进行");
+    fast::log::info("设置 - 服务器路由 - 正在进行");
     fast::blog::set_routines(server);
-    log::info("设置 - 服务器路由 - 已完成");
+    fast::log::info("设置 - 服务器路由 - 已完成");
 
     // 记录线程池创建的日志
-    log::info("创建 - 线程池 - 正在进行");
+    fast::log::info("创建 - 线程池 - 正在进行");
     BS::thread_pool<2> bs_pool;
-    log::info("创建 - 线程池 - 已完成，线程池大小为 2");
+    fast::log::info("创建 - 线程池 - 已完成，线程池大小为 2");
 
     // 记录启动服务器运行任务的日志
-    log::info("启动 - 服务器运行任务 - 正在进行");
+    fast::log::info("启动 - 服务器运行任务 - 正在进行");
     bs_pool.detach_task([&server]() {
-        log::info("执行 - 服务器运行任务 - 已启动");
+        fast::log::info("执行 - 服务器运行任务 - 已启动");
         server.run();
-        log::info("执行 - 服务器运行任务 - 已完成");
+        fast::log::info("执行 - 服务器运行任务 - 已完成");
     });
 
     // 记录启动数据库上下文运行任务的日志
-    log::info("启动 - 数据库上下文运行任务 - 正在进行");
+    fast::log::info("启动 - 数据库上下文运行任务 - 正在进行");
     bs_pool.detach_task([&db_ctx, &pool]() {
-        log::info("执行 - 数据库上下文运行任务 - 已启动");
+        fast::log::info("执行 - 数据库上下文运行任务 - 已启动");
         db_ctx.run();
         pool.cancel();
         db_ctx.stop();
-        log::info("执行 - 数据库上下文运行任务 - 已完成");
+        fast::log::info("执行 - 数据库上下文运行任务 - 已完成");
     });
 
     // 记录等待所有任务完成的日志
-    log::info("等待 - 线程池所有任务 - 正在进行");
+    fast::log::info("等待 - 线程池所有任务 - 正在进行");
     bs_pool.wait();
-    log::info("等待 - 线程池所有任务 - 已完成");
+    fast::log::info("等待 - 线程池所有任务 - 已完成");
 }

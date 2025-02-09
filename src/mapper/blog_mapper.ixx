@@ -4,11 +4,12 @@ module;
 // #include <ysql/connection_pool.hpp>
 // #include <ariant.hpp>
 
+
+export module blog_mapper;
 import std;
 import boost;
 import blog_column_entity;
 import blog_article_entity;
-export module blog_mapper;
 
 export namespace fast::mapper
 {
