@@ -10,6 +10,7 @@ import blog_article_entity;
 import blog_column_entity;
 import std;
 import small_utils;
+
 namespace fast::mapper
 {
 
@@ -62,7 +63,7 @@ asio::awaitable<void> BlogMapper::get_articles_by_column_id_awaitable(std::uint6
 {
     try
     {
-        mysql::pooled_connection conn = co_await pool_->async_get_connection(asio::use_awaitable);
+         mysql::pooled_connection conn = co_await pool_->async_get_connection(asio::use_awaitable);
 
         int offset = (page > 0) ? (page - 1) * page_size : 0;
         mysql::results result;
@@ -107,7 +108,7 @@ asio::awaitable<void> BlogMapper::get_all_blog_columns_awaitable(std::vector<fas
 {
     try
     {
-        mysql::pooled_connection conn = co_await pool_->async_get_connection(asio::use_awaitable);
+         mysql::pooled_connection conn = co_await pool_->async_get_connection(asio::use_awaitable);
 
         mysql::results result;
         mysql::diagnostics diag;
@@ -162,7 +163,7 @@ asio::awaitable<void> BlogMapper::get_article_by_article_id_awaitable(std::uint6
 {
     try
     {
-        auto conn = co_await pool_->async_get_connection(asio::use_awaitable);
+         mysql::pooled_connection conn = co_await pool_->async_get_connection(asio::use_awaitable);
 
         mysql::results result;
         mysql::diagnostics diag;
@@ -195,7 +196,8 @@ asio::awaitable<void> BlogMapper::get_article_by_article_id_awaitable(std::uint6
 
 asio::awaitable<void> BlogMapper::watch_number_added_awaitable(uint64_t article_id)
 {
-    auto conn = co_await pool_->async_get_connection(asio::use_awaitable);
+    mysql::pooled_connection conn = co_await pool_->async_get_connection(asio::use_awaitable);
+
     mysql::results result;
     mysql::diagnostics diag;
 

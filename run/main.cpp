@@ -1,4 +1,7 @@
-import std;
+#include <cpp-dump.hpp>
+#include <icecream.hpp>
+
+#include "common/crash_handler.hpp"
 import log;
 
 /**
@@ -31,14 +34,38 @@ import log;
 import std;
 import run_server;
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+// 打印用户自定义类型
+// CPP_DUMP_DEFINE_EXPORT_OBJECT_GENERIC(i, str());
+
+// 自定义结构体
+struct Person
+{
+    std::string name;
+    int age;
+    double height;
+    /**friend std::ostream &operator<<(std::ostream &os, const Person &obj)
+    {
+        return os << "name: " << obj.name << " age: " << obj.age << " height: " << obj.height;
+    }*/
+};
+
 int main()
 {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
-    // <b>lang</b> variable name to see how CLion can help you rename it.
-    // std::locale::global(std::locale("zh_CN.UTF-8")); // 设置全局 locale
-    std::cout.imbue(std::locale()); // 使 cout 使用全局 locale
+    CrashHandler handler;
+    CPP_DUMP_SET_OPTION(cont_indent_style, cpp_dump::types::cont_indent_style_t::when_non_tuples_nested);
+
+    try
+    {
+        std::locale locale = std::locale("zh_CN.UTF-8");
+        // 设置全局 locale
+        std::locale::global(locale);
+        // 将 std::cout 的区域设置为 UTF-8
+        std::cout.imbue(locale);
+    }
+    catch (std::exception &e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 
     auto lang = "C++";
     std::cout << "Hello and welcome to " << lang << "!\n";
@@ -51,8 +78,25 @@ int main()
     // 记录日志
     fast::log::info("Hello, {}!", "spdlog");
     fast::log::error("This is an error message with value: {}", 42);
+    std::vector<std::vector<int>> my_vector{{3, 5, 8, 9, 7}, {9, 3, 2, 3, 8}};
+    cpp_dump(my_vector);
+    IC(my_vector);
+    Person p = {"Alice", 25, 1.65};
+    cpp_dump(p);
+    IC(p);
+    // 创建一个存储 Person 结构体的 std::map
+    std::map<std::string, Person> personMap;
 
-    run_server();
+    // 向 map 中插入一些 Person 结构体实例
+    personMap["Alice"] = {"Alice字符", 25, 1.65};
+    personMap["Bob"] = {"Bob字符", 30, 1.80};
+    personMap["Charlie"] = {"Charlie字符2323", 35, 1.75};
+
+    // 使用 cpp-dump 打印 std::map
+    cpp_dump(personMap);
+    IC(personMap);
+
+     run_server();
     fast::log::shutdown_logger();
     return 0;
 }

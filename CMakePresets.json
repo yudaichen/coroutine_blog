@@ -7,26 +7,28 @@
   },
   "configurePresets": [
     {
-      "name": "vs2022-with-toolchain",
-      "displayName": "Visual Studio 2022 with Custom Toolchain",
-      "description": "Configure project for Visual Studio 2022 using a custom toolchain file",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build-vs2022",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/vs.toolchain.cmake"
-      },
-      "environment": {}
+        "name": "vs2022-with-toolchain",
+        "displayName": "Visual Studio 2022 with Custom Toolchain",
+        "description": "Configure project for Visual Studio 2022 using a custom toolchain file",
+        "generator": "Visual Studio 17 2022",
+        "binaryDir": "${sourceDir}/build-vs2022",
+        "cacheVariables": {
+            "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/vs.toolchain.cmake"
+        },
+        "cmakeExecutable": "F:/program/idea_tool_box/CLion/bin/cmake/win/x64/bin/cmake",
+        "environment": {}
     },
     {
-      "name": "ninja-with-clang-toolchain",
-      "displayName": "Ninja with Clang Toolchain",
-      "description": "Configure project using Ninja generator with a Clang toolchain file",
-      "generator": "Ninja",
-      "binaryDir": "${sourceDir}/build-ninja",
-      "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/clang.toolchain.cmake"
-      },
-      "environment": {}
+        "name": "ninja-with-clang-toolchain",
+        "displayName": "Ninja with Clang Toolchain",
+        "description": "Configure project using Ninja generator with a Clang toolchain file",
+        "generator": "Ninja",
+        "binaryDir": "${sourceDir}/build-ninja",
+        "cacheVariables": {
+            "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/clang.toolchain.cmake"
+        },
+        "cmakeExecutable": "/mnt/f/runtime/cmake/cmake-3.31.4-linux-x86_64/bin/cmake",
+        "environment": {}
     },
     {
       "name": "linux-debug",

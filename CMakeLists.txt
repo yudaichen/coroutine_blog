@@ -14,6 +14,9 @@ set(CMAKE_CXX_EXTENSIONS ON)
 
 setting()
 
+#如果是动态库必须开启
+#set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 # 根据编译器设置 C++20 选项
 #[[if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++23")
@@ -97,12 +100,14 @@ set(BOOST_COMPONENTS
         url
 )
 
-# 设置 Boost 不使用多线程库
-set(Boost_USE_MULTITHREADED OFF)
-if (msvc)
+
+if (MSVC)
     set(Boost_USE_MULTITHREADED ON)
     # 设置使用共享库
     set(Boost_USE_STATIC_LIBS OFF)
+else ()
+    # 设置 Boost 不使用多线程库
+    set(Boost_USE_MULTITHREADED OFF)
 endif ()
 # 查找 Boost 库，使用 NO_DEFAULT_PATH 选项
 find_package(Boost 1.87.0 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
@@ -141,6 +146,11 @@ add_subdirectory(third_party/spdlog)
 
 add_subdirectory(third_party/googletest)
 
+add_subdirectory(third_party/cpp-dump)
+include_directories(third_party/cpp-dump)
+
+add_subdirectory(third_party/icecream-cpp)
+include_directories(third_party/icecream-cpp)
 # 添加可执行文件
 add_executable(asio_blog ${CMAKE_CURRENT_SOURCE_DIR}/run/main.cpp ${MODULES_FILES} ${CURRENT_HEADERS} ${CURRENT_SOURCE})
 # 设置模块代码
@@ -178,11 +188,11 @@ endif ()
 target_link_libraries(asio_blog PRIVATE jwt-cpp nlohmann_json::nlohmann_json spdlog GTest::gtest
         GTest::gtest_main ${Boost_LIBRARIES})
 
-target_compile_features(asio_blog PRIVATE cxx_std_23)
+
 
 # 解决clion 无法识别import std
 if (UNIX)
-    set(LIBCXX_MODULE_DIRS "/usr/lib/llvm-20/share/libc++/v1")
+    set(LIBCXX_MODULE_DIRS "/usr/lib/llvm-19/share/libc++/v1")
     add_library(unused_std_target STATIC)
     target_sources(unused_std_target
             PRIVATE
@@ -201,3 +211,11 @@ elseif (WIN32)
             FILES ${LIBCXX_MODULE_DIRS}/std.ixx ${LIBCXX_MODULE_DIRS}/std.compat.ixx)
     target_compile_features(unused_std_target PRIVATE cxx_std_23)
 endif ()
+
+# 为特定目标设置编译器标志
+#[[
+if(MSVC)
+
+    target_compile_options(unused_std_target PRIVATE "/std:c++latest")
+    target_compile_options(asio_blog PRIVATE "/std:c++latest")
+endif()]]
