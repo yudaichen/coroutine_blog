@@ -52,6 +52,7 @@ add_definitions(-DBOOST_ASIO_DISABLE_VECTORIO)
 add_definitions(-DBOOST_ASIO_HAS_FILE)
 add_definitions(-DBOOST_ASIO_DISABLE_EPOLL)
 add_definitions(-DBOOST_ASIO_HAS_CO_AWAIT)
+#add_definitions(-DBOOST_ASIO_SEPARATE_COMPILATION)
 
 # 判断操作系统
 if (UNIX)
@@ -192,7 +193,7 @@ target_link_libraries(asio_blog PRIVATE jwt-cpp nlohmann_json::nlohmann_json spd
 
 # 解决clion 无法识别import std
 if (UNIX)
-    set(LIBCXX_MODULE_DIRS "/usr/lib/llvm-19/share/libc++/v1")
+    set(LIBCXX_MODULE_DIRS "/usr/lib/llvm-21/share/libc++/v1")
     add_library(unused_std_target STATIC)
     target_sources(unused_std_target
             PRIVATE

@@ -2,7 +2,7 @@
 set(CMAKE_SYSTEM_NAME Linux)
 
 # 设置 C 编译器及其选项
-set(CMAKE_C_COMPILER "/usr/bin/clang-19")
+set(CMAKE_C_COMPILER "/usr/bin/clang-21")
 set(CMAKE_C_FLAGS "-Wall -std=c99")
 set(CMAKE_C_FLAGS_DEBUG "-g")
 set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
@@ -10,7 +10,7 @@ set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG -march=native -flto")  # 注意：-O4 �
 set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g -march=native -flto")
 
 # 设置 C++ 编译器及其选项，并指定使用 libc++
-set(CMAKE_CXX_COMPILER "/usr/bin/clang++-19")
+set(CMAKE_CXX_COMPILER "/usr/bin/clang++-21")
 set(CMAKE_CXX_FLAGS "-Wall -stdlib=libc++")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
@@ -24,10 +24,10 @@ set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -stdlib=libc++ -fuse
 set(CMAKE_CXX_STANDARD_LIBRARIES "-lc++ -lc++abi")
 
 # 设置 LLVM 工具链路径
-set(CMAKE_AR      "/usr/bin/llvm-ar-19" CACHE FILEPATH "Archiver")
-set(CMAKE_RANLIB  "/usr/bin/llvm-ranlib-19" CACHE FILEPATH "Ranlib")
-set(CMAKE_NM      "/usr/bin/llvm-nm-19" CACHE FILEPATH "NM")
-set(CMAKE_OBJDUMP "/usr/bin/llvm-objdump-19" CACHE FILEPATH "Objdump")
+set(CMAKE_AR      "/usr/bin/llvm-ar-21" CACHE FILEPATH "Archiver")
+set(CMAKE_RANLIB  "/usr/bin/llvm-ranlib-21" CACHE FILEPATH "Ranlib")
+set(CMAKE_NM      "/usr/bin/llvm-nm-21" CACHE FILEPATH "NM")
+set(CMAKE_OBJDUMP "/usr/bin/llvm-objdump-21" CACHE FILEPATH "Objdump")
 #GNU gold 最慢  LLVM lld其次  mold 最快  [readelf -p .comment 可执行文件（判断link使用的方法）]
 #set(CMAKE_LINKER  "/usr/bin/llvm-ld-20" CACHE FILEPATH "Linker")
 set(CMAKE_LINKER  "/usr/bin/mold" CACHE FILEPATH "Linker")

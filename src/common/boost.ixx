@@ -11,6 +11,11 @@ module; // 全局模块片段
 #include <boost/asio/ip/udp.hpp>
 #include <boost/asio/signal_set.hpp>
 #include <boost/asio/ssl.hpp>
+/*
+#include <boost/asio/impl/src.hpp>
+#include <boost/asio/ssl/impl/src.hpp>
+*/
+
 #include <boost/asio/static_thread_pool.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <boost/asio/use_awaitable.hpp>

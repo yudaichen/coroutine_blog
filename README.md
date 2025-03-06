@@ -159,6 +159,11 @@ https://apt.llvm.org/
     sudo apt update
     sudo apt install clang-19 libclang-common-19-dev
 
+    sudo apt-get install clang-21 lldb-21 lld-21
+    sudo apt-get install clang-21 lldb-21 lld-21
+    sudo apt-get install libllvm21 llvm-21 llvm-21-dev llvm-21-runtime
+    sudo apt-get install lldb-21 lld-21 libc++-21-dev libc++abi-21-dev clang-tools-21 libclang-common-21-dev libclang-21-dev libclang1-21 libunwind-21-dev
+
 ## Boost 库使用 Clang 编译器的编译方法
 
 ### 一、编译准备
@@ -215,6 +220,14 @@ using clang : : clang++-20 : <cxxflags>"-stdlib=libc++" <linkflags>"-stdlib=libc
 - `link=shared`：编译为共享库。
 - `threading=multi`：启用多线程支持。
 - `cxxstd=20`：指定使用 C++20 标准进行编译。
+
+#### gemini 构建boost clang
+    ./b2 cxxflags="-stdlib=libc++" linkflags="-lc++abi" toolset=clang-19
+
+  user-config.jam
+
+    using clang : 19 : clang++-19 :
+    <cxxflags>-stdlib=libc++ <linkflags>-lc++abi ;
 
 ## ubuntu mysql启动
 

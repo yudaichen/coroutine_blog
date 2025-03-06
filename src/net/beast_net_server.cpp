@@ -5,16 +5,17 @@ module;
 #include <boost/beast/http/error.hpp>
 #include <boost/beast/websocket/error.hpp>
 #include <boost/system/error_code.hpp>
+#include <boost/asio/ssl/error.hpp>
 
 import std;
 import mysql_connect;
 import log; // 导入 log 模块
-module beast_net_server;
 import session_data;
 import router_process;
 import net_common;
 import boost;
 
+module beast_net_server;
 namespace fast::net
 {
 task_group::task_group(asio::any_io_executor exec) : cv_{std::move(exec), asio::steady_timer::time_point::max()}
@@ -454,30 +455,22 @@ asio::awaitable<void> fast::net::Server::handle_signals(fast::net::task_group &t
     auto executor = co_await asio::this_coro::executor;
     log::info("初始化 - 信号处理 - 正在创建信号集");
     auto signal_set = asio::signal_set{executor, SIGINT, SIGTERM};
-    log::info("初始化 - 信号处理 - 信号集创建完成");
 
     log::info("等待 - 信号接收 - 正在等待信号");
     auto sig = co_await signal_set.async_wait();
-    log::info("接收 - 信号接收 - 收到信号: {}", sig);
 
     log::info("执行 - 任务取消 - 正在优雅地取消子任务");
     task_group.emit(asio::cancellation_type::terminal);
-    log::info("执行 - 任务取消 - 已发出全面取消信号");
 
     log::info("等待 - 任务完成 - 正在等待所有子任务完成");
     auto [ec] = co_await task_group.async_wait(asio::as_tuple(asio::cancel_after(std::chrono::seconds{10})));
 
     if (ec == boost::asio::error::operation_aborted)
     {
-        log::info("超时 - 任务完成 - 优雅取消在 10 秒后超时");
         log::info("执行 - 任务取消 - 正在发送终止取消信号");
         task_group.emit(asio::cancellation_type::terminal);
-        log::info("执行 - 任务取消 - 已发出终止取消信号");
-        log::info("等待 - 任务完成 - 再次等待所有子任务完成");
         co_await task_group.async_wait();
     }
-
-    log::info("完成 - 任务完成 - 子任务已完成");
 
     log::info("停止 - io_context - 正在停止 io_context");
     ioc.stop();
