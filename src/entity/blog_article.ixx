@@ -1,5 +1,6 @@
 module;
 
+//#include "nlohmann/detail/macro_scope.hpp"
 /*#include <boost/json/object.hpp>
 #include <boost/json/array.hpp>
 #include <boost/mysql/datetime.hpp>*/
@@ -7,18 +8,28 @@ import boost;
 import std;
 export module blog_article_entity;
 
+
 export namespace fast::entity
 {
 using namespace std;
 struct BlogArticle
 {
+    /*BlogArticle(std::uint64_t article_id, const std::string &title, const std::string &content_preview,
+                const std::string &markdown, const mysql::datetime &create_time, const mysql::datetime &update_time)
+        : article_id(article_id), title(title), content_preview(content_preview), markdown(markdown),
+          create_time(create_time), update_time(update_time)
+    {
+    }*/
     std::uint64_t article_id;
     std::string title;
     std::string content_preview;
     std::string markdown;
     mysql::datetime create_time;
     mysql::datetime update_time;
+
+    //NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(BlogArticle, fields)
 };
+
 
 chrono::system_clock::time_point mysql_datetime_to_time_point(const mysql::datetime &dt)
 {

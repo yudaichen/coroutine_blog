@@ -1,5 +1,6 @@
 # clion
 cmake-build*
+build-*
 .idea
 
 # VS
