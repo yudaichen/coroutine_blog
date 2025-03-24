@@ -73,7 +73,7 @@ if (UNIX)
     set(Boost_DIR "/mnt/f/runtime/dep_lib/ubuntu24/clang-boost/boost_1_87_0/stage/lib/cmake/Boost-1.87.0")
     add_definitions(-DBOOST_ASIO_HAS_IO_URING)
     add_definitions(-DASIO_HAS_IO_URING)
-    include_directories(/usr/include)
+    #include_directories(/usr/include)
     include_directories(/usr/local/include)
     include_directories(/usr/include/liburing)
     link_directories(/usr/lib/x86_64-linux-gnu)
@@ -83,6 +83,8 @@ elseif (MSVC)
     # Boost 库路径
     set(Boost_DIR "F:/runtime/dep_lib/win/boost_1_87_0/stage/lib/cmake/Boost-1.87.0")
 endif ()
+
+#include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/debug/conan_toolchain.cmake)
 
 # 列出需要的 Boost 组件
 set(BOOST_COMPONENTS
@@ -127,6 +129,28 @@ if (CCACHE_PROGRAM)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_PROGRAM})
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_PROGRAM})
 endif ()
+
+# 查找 Doxygen
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+    # 设置 Doxygen 配置文件路径
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+    # 配置 Doxyfile，将变量替换为实际值
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+
+    # 添加自定义目标来生成文档
+    add_custom_target(
+            docs
+            COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Generating API documentation with Doxygen"
+            VERBATIM
+    )
+else(DOXYGEN_FOUND)
+    message("Doxygen not found, documentation will not be generated.")
+endif(DOXYGEN_FOUND)
 
 # 添加子模块目录
 add_subdirectory(third_party/nlohmann_json)
